@@ -22,7 +22,7 @@ function getNavigation() {
 
     const ul = document.querySelector("#list-message");
     for (let i = 0; i < data.length; i++) {
-      const div = AddMessage(
+      const div = AddMessageNav(
         data[i].group_id,
         data[i].group_name,
         data[i].last_message,
@@ -47,10 +47,79 @@ function getCookie(cname) {
   }
   return "";
 }
-function AddMessage(group_id, group_name, last_message, last_message_time) {
+
+// function getGroupID(id) {
+//   console.log(id);
+// }
+function ChangeGroup() {
+  document.getElementById("chat-space").innerHTML = "";
+
+  (async () => {
+    // const rawResponse = await fetch(
+    //   "http://42.112.154.30:4000/msg/" + li.id,
+    //   {
+    //     method: "GET",
+    //     headers: {
+    //       Accept: "application/json",
+    //       "Content-Type": "application/json",
+    //       //accessToken: accessToken,
+    //     },
+    //     //body: JSON.stringify({email: email, password: password})
+    //   }
+    // );
+    // const content = await rawResponse.json();
+    // let mydata = JSON.parse(content);
+    mydata = {
+      group_name: "Project Isekai !",
+      messages: [
+        {
+          id: "12345678",
+          sender: "12345678",
+          text: "Hello World !!!",
+          mediaID: "",
+          datetime: "9/9/2030",
+        },
+        {
+          id: "15465611",
+          sender: "12345679",
+          text: "Gaming Time !!!",
+          mediaID: "",
+          datetime: "10/10/2030",
+        },
+        {
+          id: "14543653",
+          sender: "12345670",
+          text: "Anime Time !!!!",
+          mediaID: "",
+          datetime: "11/11/2030",
+        },
+        {
+          id: "15681346",
+          sender: "12345671",
+          text: "Festival Time !!!",
+          mediaID: "",
+          datetime: "12/12/2030",
+        },
+      ],
+    };
+
+    console.log(mydata);
+    console.log(mydata.group_name);
+    document.getElementById("friendName").innerHTML = mydata.group_name;
+    for (let i = 0; i < mydata.messages.length; i++) {
+      console.log(mydata.messages[i]);
+    }
+    const ul = document.getElementById("chat-space");
+    const li2 = AppendMessage(1, "12345678", 3, 4, 5);
+    ul.appendChild(li2);
+  })();
+}
+function AddMessageNav(group_id, group_name, last_message, last_message_time) {
   const li = document.createElement("li");
+
   li.style.cursor = "pointer";
   li.id = group_id;
+  li.addEventListener("click", ChangeGroup());
 
   const div = document.createElement("div");
   div.classList.add("card", "border-0");
@@ -108,6 +177,117 @@ function AddMessage(group_id, group_name, last_message, last_message_time) {
 
   li.appendChild(div);
 
+  return li;
+}
+function AppendMessage(MessageID, UserID, Message, MediaID, DateTime) {
+  const userId = getCookie("userId");
+  if (UserID != userId) {
+    const li = document.createElement("li");
+    li.classList.add("my-2");
+
+    const div = document.createElement("div");
+    div.classList.add("card", "border", "border-muted");
+    div.style.width = "65%";
+    div.style.borderTopLeftRadius = "0px";
+    div.style.borderTopRightRadius = "20px";
+    div.style.borderBottomRightRadius = "20px";
+    div.style.borderBottomLeftRadius = "20px";
+    div.style.background = "rgba(52, 58, 64, 0.05)";
+
+    const cardBodyDiv = document.createElement("div");
+    cardBodyDiv.classList.add("card-body", "text-center", "p-2");
+
+    const p = document.createElement("p");
+    p.classList.add("text-start", "card-text");
+    p.style.fontSize = "1rem";
+    //message
+    p.textContent = Message;
+    const h6 = document.createElement("h6");
+    h6.classList.add("text-muted", "card-subtitle", "text-end");
+    h6.style.fontSize = "0.75rem";
+    h6.textContent = DateTime;
+
+    cardBodyDiv.appendChild(p);
+    cardBodyDiv.appendChild(h6);
+    div.appendChild(cardBodyDiv);
+    li.appendChild(div);
+    return li;
+  }
+  // const li = document.createElement("li");
+  // li.classList.add("d-flex", "justify-content-end", "my-2");
+
+  // const div = document.createElement("div");
+  // div.classList.add("card", "border", "border-muted");
+  // div.style.width = "65%";
+  // div.style.borderTopLeftRadius = "20px";
+  // div.style.borderTopRightRadius = "0px";
+  // div.style.borderBottomRightRadius = "20px";
+  // div.style.borderBottomLeftRadius = "20px";
+  // div.style.background = "rgba(52, 58, 64, 0.05)";
+
+  // const cardBody = document.createElement("div");
+  // cardBody.classList.add("card-body", "text-center", "p-2");
+
+  // //const img = document.createElement("img");
+  // //img.classList.add("img-fluid", "mb-2");
+  // //img
+  // // img.src = "assets/img/333580.jpg";
+  // // img.style.maxHeight = "30rem";
+  // // img.style.height = "auto";
+  // // img.style.minHeight = "10rem";
+
+  // const p = document.createElement("p");
+  // p.classList.add("text-start", "card-text");
+  // //message
+  // p.style.fontSize = "1rem";
+  // p.textContent = Message;
+
+  // const h6 = document.createElement("h6");
+  // h6.classList.add("text-muted", "card-subtitle", "text-end");
+  // h6.style.fontSize = "0.75rem";
+  // //datetime
+  // h6.textContent = DateTime;
+
+  // //cardBody.appendChild(img);
+  // cardBody.appendChild(p);
+  // cardBody.appendChild(h6);
+
+  // div.appendChild(cardBody);
+
+  // li.appendChild(div);
+  // return li;
+  const li = document.createElement("li");
+  li.classList.add("d-flex", "justify-content-end", "my-2");
+
+  const div = document.createElement("div");
+  div.classList.add("card", "border", "border-muted");
+  div.style.width = "65%";
+  div.style.borderTopLeftRadius = "20px";
+  div.style.borderTopRightRadius = "0px";
+  div.style.borderBottomRightRadius = "20px";
+  div.style.borderBottomLeftRadius = "20px";
+  div.style.background = "rgba(52, 58, 64, 0.05)";
+
+  const cardBodyDiv = document.createElement("div");
+  cardBodyDiv.classList.add("card-body", "text-center", "p-2");
+
+  const cardTextP = document.createElement("p");
+  cardTextP.classList.add("text-start", "card-text");
+  cardTextP.style.fontSize = "1rem";
+  cardTextP.textContent =
+    "Nullam id dolor id nibh ultricies vehicula ut id elit. Cras justo odio, dapibus ac facilisis in, egestas eget quam. Donec id elit non mi porta gravida at eget metus.";
+
+  const cardSubtitleH6 = document.createElement("h6");
+  cardSubtitleH6.classList.add("text-muted", "card-subtitle", "text-end");
+  cardSubtitleH6.style.fontSize = "0.75rem";
+  cardSubtitleH6.textContent = "Julio 22, 2021. 12:33 P.M.";
+
+  cardBodyDiv.appendChild(cardTextP);
+  cardBodyDiv.appendChild(cardSubtitleH6);
+
+  div.appendChild(cardBodyDiv);
+
+  li.appendChild(div);
   return li;
 }
 getNavigation();
@@ -239,8 +419,3 @@ myInput.addEventListener("keyup", function (event) {
     // alert("search");
   }
 });
-
-function getGroupID()
-{
-  
-}
