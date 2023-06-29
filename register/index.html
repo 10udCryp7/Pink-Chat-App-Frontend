@@ -9,6 +9,7 @@
     <title>Register</title>
     <link rel="stylesheet" href="assets/bootstrap/css/bootstrap.min.css" />
     <link rel="stylesheet" href="assets/css/Login-Box-En-login-box-en.css" />
+    <script src="../register/assets/register.js"></script>
   </head>
 
   <body>
@@ -27,6 +28,7 @@
       </div>
       <div class="email-login" style="background-color: #ffffff">
         <input
+          id="email"
           type="email"
           class="email-imput form-control"
           style="margin-top: 10px"
@@ -34,6 +36,7 @@
           placeholder="Email"
           minlength="6"
         /><input
+          id="password"
           type="password"
           class="password-input form-control"
           style="margin-top: 10px"
@@ -41,6 +44,7 @@
           placeholder="Password"
           minlength="6"
         /><input
+          id="rePassword"
           type="password"
           class="password-input form-control"
           style="margin-top: 10px"
@@ -54,6 +58,7 @@
           class="btn btn-primary d-block box-shadow w-100"
           id="submit-id-submit"
           type="submit"
+          onclick="Register()"
         >
           Register
         </button>
@@ -63,7 +68,7 @@
         style="padding: 10px 20px; padding-bottom: 23px; padding-top: 18px"
       >
         <p style="margin-bottom: 0px">
-          Already have an account?<a id="register-link" href="#">Login!</a>
+          Already have an account?<a id="register-link" href="../login/index.html">Login!</a>
         </p>
       </div>
     </div>
