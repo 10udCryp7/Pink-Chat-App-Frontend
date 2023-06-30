@@ -1,19 +1,19 @@
+var currentGroup;
+//---LAY CAI BEN TRAI---
+getNavigation();
 function getNavigation() {
   const accessToken = getCookie("accessToken");
   console.log(accessToken);
   (async () => {
-    const rawResponse = await fetch(
-      "http://42.112.154.30:4000/msg/navigation",
-      {
-        method: "GET",
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json",
-          accessToken: accessToken,
-        },
-        //body: JSON.stringify({email: email, password: password})
-      }
-    );
+    const rawResponse = await fetch("http://127.0.0.1:4000/msg/navigation", {
+      method: "GET",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        accessToken: accessToken,
+      },
+      //body: JSON.stringify({email: email, password: password})
+    });
     const content = await rawResponse.json();
     let mydata = JSON.parse(content);
 
@@ -32,6 +32,8 @@ function getNavigation() {
     }
   })();
 }
+
+//---LAY COOKIE---
 function getCookie(cname) {
   let name = cname + "=";
   let decodedCookie = decodeURIComponent(document.cookie);
@@ -48,78 +50,48 @@ function getCookie(cname) {
   return "";
 }
 
-// function getGroupID(id) {
-//   console.log(id);
-// }
-function ChangeGroup() {
-  document.getElementById("chat-space").innerHTML = "";
-
-  (async () => {
-    // const rawResponse = await fetch(
-    //   "http://42.112.154.30:4000/msg/" + li.id,
-    //   {
-    //     method: "GET",
-    //     headers: {
-    //       Accept: "application/json",
-    //       "Content-Type": "application/json",
-    //       //accessToken: accessToken,
-    //     },
-    //     //body: JSON.stringify({email: email, password: password})
-    //   }
-    // );
-    // const content = await rawResponse.json();
-    // let mydata = JSON.parse(content);
-    mydata = {
-      group_name: "Project Isekai !",
-      messages: [
-        {
-          id: "12345678",
-          sender: "12345678",
-          text: "Hello World !!!",
-          mediaID: "",
-          datetime: "9/9/2030",
-        },
-        {
-          id: "15465611",
-          sender: "12345679",
-          text: "Gaming Time !!!",
-          mediaID: "",
-          datetime: "10/10/2030",
-        },
-        {
-          id: "14543653",
-          sender: "12345670",
-          text: "Anime Time !!!!",
-          mediaID: "",
-          datetime: "11/11/2030",
-        },
-        {
-          id: "15681346",
-          sender: "12345671",
-          text: "Festival Time !!!",
-          mediaID: "",
-          datetime: "12/12/2030",
-        },
-      ],
-    };
-
-    console.log(mydata);
-    console.log(mydata.group_name);
-    document.getElementById("friendName").innerHTML = mydata.group_name;
-    for (let i = 0; i < mydata.messages.length; i++) {
-      console.log(mydata.messages[i]);
-    }
-    const ul = document.getElementById("chat-space");
-    const li2 = AppendMessage(1, "12345678", 3, 4, 5);
-    ul.appendChild(li2);
-  })();
-}
+//---THEM GROUP VAO NAV---
 function AddMessageNav(group_id, group_name, last_message, last_message_time) {
   const li = document.createElement("li");
 
   li.style.cursor = "pointer";
   li.id = group_id;
-  li.addEventListener("click", ChangeGroup());
+  console.log(group_id);
+  li.addEventListener("click", function ChangeGroup() {
+    currentGroup = group_id;
+    document.getElementById("chat-space").innerHTML = "";
+    document
+      .getElementById(group_id)
+      .getElementsByTagName("span")[0].style.display = "none";
+    (async () => {
+      const rawResponse = await fetch("http://127.0.0.1:4000/msg/" + group_id, {
+        method: "GET",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+      });
+      const content = await rawResponse.json();
+      let mydata = JSON.parse(content);
+      console.log(mydata);
+      console.log(mydata.group_name);
+      document.getElementById("friendName").innerHTML = mydata.group_name;
+      for (let i = 0; i < mydata.messages.length; i++) {
+        console.log(mydata.messages[i]);
+      }
+      const ul = document.getElementById("chat-space");
+      for (let i = 0; i < mydata.messages.length; i++) {
+        const li2 = AppendMessage(
+          mydata.messages[i].id,
+          mydata.messages[i].sender,
+          mydata.messages[i].text,
+          mydata.messages[i].mediaID,
+          mydata.messages[i].datetime
+        );
+        ul.appendChild(li2);
+      }
+    })();
+  });
 
   const div = document.createElement("div");
   div.classList.add("card", "border-0");
@@ -179,12 +151,19 @@ function AddMessageNav(group_id, group_name, last_message, last_message_time) {
 
   return li;
 }
+
+//---THEM TIN NHAN---
 function AppendMessage(MessageID, UserID, Message, MediaID, DateTime) {
   const userId = getCookie("userId");
   if (UserID != userId) {
     const li = document.createElement("li");
-    li.classList.add("my-2");
-
+    li.classList.add(
+      "d-flex",
+      "justify-content-start",
+      "my-2",
+      "align-items-end"
+    );
+    li.style.height = "fit-content";
     const div = document.createElement("div");
     div.classList.add("card", "border", "border-muted");
     div.style.width = "65%";
@@ -213,21 +192,6 @@ function AppendMessage(MessageID, UserID, Message, MediaID, DateTime) {
     li.appendChild(div);
     return li;
   }
-  // const li = document.createElement("li");
-  // li.classList.add("d-flex", "justify-content-end", "my-2");
-
-  // const div = document.createElement("div");
-  // div.classList.add("card", "border", "border-muted");
-  // div.style.width = "65%";
-  // div.style.borderTopLeftRadius = "20px";
-  // div.style.borderTopRightRadius = "0px";
-  // div.style.borderBottomRightRadius = "20px";
-  // div.style.borderBottomLeftRadius = "20px";
-  // div.style.background = "rgba(52, 58, 64, 0.05)";
-
-  // const cardBody = document.createElement("div");
-  // cardBody.classList.add("card-body", "text-center", "p-2");
-
   // //const img = document.createElement("img");
   // //img.classList.add("img-fluid", "mb-2");
   // //img
@@ -236,67 +200,53 @@ function AppendMessage(MessageID, UserID, Message, MediaID, DateTime) {
   // // img.style.height = "auto";
   // // img.style.minHeight = "10rem";
 
-  // const p = document.createElement("p");
-  // p.classList.add("text-start", "card-text");
-  // //message
-  // p.style.fontSize = "1rem";
-  // p.textContent = Message;
-
-  // const h6 = document.createElement("h6");
-  // h6.classList.add("text-muted", "card-subtitle", "text-end");
-  // h6.style.fontSize = "0.75rem";
-  // //datetime
-  // h6.textContent = DateTime;
-
   // //cardBody.appendChild(img);
-  // cardBody.appendChild(p);
-  // cardBody.appendChild(h6);
+  else {
+    const li = document.createElement("li");
+    li.classList.add(
+      "d-flex",
+      "justify-content-end",
+      "my-2",
+      "align-items-end"
+    );
+    li.style.height = "fit-content";
+    const div = document.createElement("div");
+    div.classList.add("card", "border", "border-muted");
+    div.style.width = "65%";
+    div.style.borderTopLeftRadius = "20px";
+    div.style.borderTopRightRadius = "0px";
+    div.style.borderBottomRightRadius = "20px";
+    div.style.borderBottomLeftRadius = "20px";
+    div.style.background = "rgba(52, 58, 64, 0.05)";
 
-  // div.appendChild(cardBody);
+    const cardBodyDiv = document.createElement("div");
+    cardBodyDiv.classList.add("card-body", "text-center", "p-2");
 
-  // li.appendChild(div);
-  // return li;
-  const li = document.createElement("li");
-  li.classList.add("d-flex", "justify-content-end", "my-2");
+    const cardTextP = document.createElement("p");
+    cardTextP.classList.add("text-start", "card-text");
+    cardTextP.style.fontSize = "1rem";
+    cardTextP.textContent = Message;
 
-  const div = document.createElement("div");
-  div.classList.add("card", "border", "border-muted");
-  div.style.width = "65%";
-  div.style.borderTopLeftRadius = "20px";
-  div.style.borderTopRightRadius = "0px";
-  div.style.borderBottomRightRadius = "20px";
-  div.style.borderBottomLeftRadius = "20px";
-  div.style.background = "rgba(52, 58, 64, 0.05)";
+    const cardSubtitleH6 = document.createElement("h6");
+    cardSubtitleH6.classList.add("text-muted", "card-subtitle", "text-end");
+    cardSubtitleH6.style.fontSize = "0.75rem";
+    cardSubtitleH6.textContent = DateTime;
 
-  const cardBodyDiv = document.createElement("div");
-  cardBodyDiv.classList.add("card-body", "text-center", "p-2");
+    cardBodyDiv.appendChild(cardTextP);
+    cardBodyDiv.appendChild(cardSubtitleH6);
 
-  const cardTextP = document.createElement("p");
-  cardTextP.classList.add("text-start", "card-text");
-  cardTextP.style.fontSize = "1rem";
-  cardTextP.textContent =
-    "Nullam id dolor id nibh ultricies vehicula ut id elit. Cras justo odio, dapibus ac facilisis in, egestas eget quam. Donec id elit non mi porta gravida at eget metus.";
+    div.appendChild(cardBodyDiv);
 
-  const cardSubtitleH6 = document.createElement("h6");
-  cardSubtitleH6.classList.add("text-muted", "card-subtitle", "text-end");
-  cardSubtitleH6.style.fontSize = "0.75rem";
-  cardSubtitleH6.textContent = "Julio 22, 2021. 12:33 P.M.";
-
-  cardBodyDiv.appendChild(cardTextP);
-  cardBodyDiv.appendChild(cardSubtitleH6);
-
-  div.appendChild(cardBodyDiv);
-
-  li.appendChild(div);
-  return li;
+    li.appendChild(div);
+    return li;
+  }
 }
-getNavigation();
-
+//---TRA VE KET QUA TIM KIEM---
 function GetSearch() {
   const search_detail = document.getElementById("searchInput").value;
   (async () => {
     const rawResponse = await fetch(
-      "http://42.112.154.30:4000/msg/find/" + search_detail,
+      "http://127.0.0.1:4000/msg/find/" + search_detail,
       {
         method: "GET",
         headers: {
@@ -311,7 +261,6 @@ function GetSearch() {
     console.log(content);
     let mydata = JSON.parse(content);
     const data = mydata.data;
-    //console.log(data);
     for (let i = 0; i < data.length; i++) {
       const li = AddSearch(data[i].userName);
       const ul = document.getElementById("myUL");
@@ -321,7 +270,7 @@ function GetSearch() {
     }
   })();
 }
-
+//---THEM USERNAME VAO KET QUA TIM KIEM---
 function AddSearch(name) {
   const li1 = document.createElement("li");
   li1.classList.add("col-6");
@@ -332,6 +281,8 @@ function AddSearch(name) {
   li1.appendChild(a1);
   return li1;
 }
+
+//---THEM ICON KET QUA TIM KIEM---
 function AddIcon(userID) {
   const li2 = document.createElement("li");
   li2.classList.add("col-4");
@@ -343,37 +294,10 @@ function AddIcon(userID) {
   li2.appendChild(i2);
   return li2;
 }
-
-function getMessage(group_id) {
-  (async () => {
-    const rawResponse = await fetch("http://42.112.154.30:4000/login", {
-      method: "POST",
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ id: group_id }),
-    });
-    const content = await rawResponse.json();
-
-    console.log(content);
-    let mydata = JSON.parse(content);
-
-    const data = mydata.messages;
-    console.log(data);
-    for (let i = 0; i < data.length; i++) {
-      console.log(data.id);
-      console.log(data.sender);
-      console.log(data.text);
-      console.log(data.mediaID);
-      console.log(data.datetime);
-    }
-  })();
-}
-
+//---LAY TEN USER CUA USERID---
 function getUserName(userID) {
   (async () => {
-    const rawResponse = await fetch("http://42.112.154.30:4000/login", {
+    const rawResponse = await fetch("http://127.0.0.1:4000/login", {
       method: "POST",
       headers: {
         Accept: "application/json",
@@ -389,6 +313,7 @@ function getUserName(userID) {
   })();
 }
 
+//---AN KET QUA TIM KIEM---
 document.addEventListener("click", function (event) {
   let myDiv = document.getElementById("myUL");
   // If the click was outside of the div element
@@ -412,6 +337,7 @@ myInput.addEventListener("keyup", function (event) {
   event.preventDefault();
   // If the Enter key was pressed
   if (event.key === "Enter") {
+    document.getElementById("myUL").innerHTML = "";
     let myDiv = document.getElementById("myUL");
     myDiv.style.display = "";
     GetSearch();
@@ -419,3 +345,81 @@ myInput.addEventListener("keyup", function (event) {
     // alert("search");
   }
 });
+
+// //---SOCKET---
+// const socket = io("http://127.0.0.1:3000");
+
+// socket.emit("new-user", getCookie("accessToken"));
+
+// socket.on("deliver-chat-message", (data) => {
+//   //console.log(data)
+//   appendMessageNavigationChecked(
+//     data.group_id,
+//     data.message,
+//     data.sender_id,
+//     data.time
+//   );
+//   if (data.group_id == current_group) {
+//     AppendMessage("", data.sender_id, data.message, "", data.time);
+//   }
+// });
+
+const chat_input = document.getElementById("chat_input");
+
+chat_input.addEventListener("keyup", function (event) {
+  if (event.key === "Enter") {
+    sendMessage();
+  }
+});
+
+//---NHAN TIN---
+function sendMessage() {
+  let message = chat_input.value;
+  let currentdate = new Date();
+  let userID = getCookie("userId");
+  let formatted_cdate =
+    currentdate.getDate() +
+    "/" +
+    (currentdate.getMonth() + 1) +
+    "/" +
+    currentdate.getFullYear() +
+    " " +
+    currentdate.getHours() +
+    ":" +
+    currentdate.getMinutes() +
+    ":" +
+    currentdate.getSeconds();
+  // socket.emit("send-chat-message", {
+  //   room: current_group,
+  //   message: message,
+  //   time: formatted_cdate,
+  // });
+  chat_input.value = "";
+  let ul = document.getElementById("chat-space");
+  ul.appendChild(AppendMessage("", userID, message, "", formatted_cdate));
+}
+
+
+//---KIEM TRA SU TON TAI CUA GROUP, SUA THONG TIN, THEM GROUP MOI---
+function appendMessageNavigationChecked(group_id, message, sender_id, time) {
+  const navigationList = document.getElementById("list-message");
+  let listOfli = navigationList.querySelectorAll("li");
+  let liIdList = [];
+  listOfli.forEach((li) => {
+    liIdList.push(li.id);
+  });
+  if (liIdList.includes(group_id)) {
+    let li = document.getElementById(group_id);
+    let h4 = li.querySelector("h4");
+    let h6s = li.querySelectorAll("h6");
+
+    h4.textContent = getGroupName(group_id);
+    h6s[0].textContent = time;
+    h6s[1].textContent = message;
+    let span = li.querySelector("span");
+    span.textContent = "";
+    span.style.display = "";
+  } else {
+    AddMessageNav(group_id, getGroupName(group_id), message, time);
+  }
+}
