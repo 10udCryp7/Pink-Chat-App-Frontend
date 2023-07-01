@@ -3,7 +3,7 @@ function ProfileSetting() {
   const email = document.getElementById("eMail").value;
   const password = document.getElementById("password").value;
   const newPassword = document
-    .getElementById("newPassw+ord")
+    .getElementById("newPassword")
     .value(async () => {
       const rawResponse = await fetch("https://httpbin.org/post", {
         method: "POST",

@@ -5,6 +5,7 @@ function getNavigation() {
   const accessToken = getCookie("accessToken");
   console.log(accessToken);
   (async () => {
+    //CHƯA CÓ
     const rawResponse = await fetch("http://127.0.0.1:4000/msg/navigation", {
       method: "GET",
       headers: {
@@ -57,41 +58,7 @@ function AddMessageNav(group_id, group_name, last_message, last_message_time) {
   li.style.cursor = "pointer";
   li.id = group_id;
   console.log(group_id);
-  li.addEventListener("click", function ChangeGroup() {
-    currentGroup = group_id;
-    document.getElementById("chat-space").innerHTML = "";
-    document
-      .getElementById(group_id)
-      .getElementsByTagName("span")[0].style.display = "none";
-    (async () => {
-      const rawResponse = await fetch("http://127.0.0.1:4000/msg/" + group_id, {
-        method: "GET",
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json",
-        },
-      });
-      const content = await rawResponse.json();
-      let mydata = JSON.parse(content);
-      console.log(mydata);
-      console.log(mydata.group_name);
-      document.getElementById("friendName").innerHTML = mydata.group_name;
-      for (let i = 0; i < mydata.messages.length; i++) {
-        console.log(mydata.messages[i]);
-      }
-      const ul = document.getElementById("chat-space");
-      for (let i = 0; i < mydata.messages.length; i++) {
-        const li2 = AppendMessage(
-          mydata.messages[i].id,
-          mydata.messages[i].sender,
-          mydata.messages[i].text,
-          mydata.messages[i].mediaID,
-          mydata.messages[i].datetime
-        );
-        ul.appendChild(li2);
-      }
-    })();
-  });
+  li.addEventListener("click", ChangeGroup(group_id));
 
   const div = document.createElement("div");
   div.classList.add("card", "border-0");
@@ -152,6 +119,47 @@ function AddMessageNav(group_id, group_name, last_message, last_message_time) {
   return li;
 }
 
+function ChangeGroup(group_id) {
+  return function () {
+    currentGroup = group_id;
+    document.getElementById("chat-space").innerHTML = "";
+    document
+      .getElementById(group_id)
+      .getElementsByTagName("span")[0].style.display = "none";
+    (async () => {
+      const rawResponse = await fetch("http://127.0.0.1:5500/message/list", {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`
+        },
+        body: JSON.stringify({ groupId: group_id }),
+      });
+      const content = await rawResponse.json();
+      let mydata = JSON.parse(content);
+      console.log(mydata);
+      let groupName = getGroupName(group_id);
+      document.getElementById("friendName").innerHTML = groupName;
+      for (let i = 0; i < mydata.list.length; i++) {
+        console.log(mydata.list[i]);
+      }
+      const ul = document.getElementById("chat-space");
+      for (let i = 0; i < mydata.list.length; i++) {
+        const li2 = AppendMessage(
+          mydata.list[i].id,
+          mydata.list[i].sender,
+          mydata.list[i].text,
+          mydata.list[i].mediaID,
+          mydata.list[i].datetime
+        );
+        ul.appendChild(li2);
+        var elem = document.getElementById("chat-space");
+        elem.scrollTop = elem.scrollHeight;
+      }
+    })();
+  };
+}
 //---THEM TIN NHAN---
 function AppendMessage(MessageID, UserID, Message, MediaID, DateTime) {
   const userId = getCookie("userId");
@@ -245,6 +253,7 @@ function AppendMessage(MessageID, UserID, Message, MediaID, DateTime) {
 function GetSearch() {
   const search_detail = document.getElementById("searchInput").value;
   (async () => {
+    //CHƯA CÓ
     const rawResponse = await fetch(
       "http://127.0.0.1:4000/msg/find/" + search_detail,
       {
@@ -264,9 +273,21 @@ function GetSearch() {
     for (let i = 0; i < data.length; i++) {
       const li = AddSearch(data[i].userName);
       const ul = document.getElementById("myUL");
+      const div = document.createElement("div");
+      div.appendChild(li);
+      div.appendChild(AddIcon(data[i].userID));
       const firstLi = ul.firstChild;
-      ul.insertBefore(li, firstLi);
-      ul.insertBefore(AddIcon(data[i].userID), firstLi);
+      div.addEventListener("mouseover", function () {
+        this.style.backgroundColor = "white";
+      });
+
+      // Remove the class from the div when not hovering
+      div.addEventListener("mouseout", function () {
+        this.style.backgroundColor = "lightgray";
+      });
+      ul.insertBefore(div, firstLi);
+      // ul.insertBefore(li, firstLi);
+      // ul.insertBefore(AddIcon(data[i].userID), firstLi);
     }
   })();
 }
@@ -275,6 +296,7 @@ function AddSearch(name) {
   const li1 = document.createElement("li");
   li1.classList.add("col-6");
   li1.style.display = "inline-block";
+  li1.style.paddingLeft = "1vw";
   const a1 = document.createElement("a");
   a1.href = "#";
   a1.textContent = name;
@@ -287,6 +309,7 @@ function AddIcon(userID) {
   const li2 = document.createElement("li");
   li2.classList.add("col-4");
   li2.style.display = "inline-block";
+  li2.onclick = connectUser(userID);
   const i2 = document.createElement("i");
   i2.id = userID;
   i2.classList.add("fab", "fa-telegram-plane");
@@ -294,9 +317,11 @@ function AddIcon(userID) {
   li2.appendChild(i2);
   return li2;
 }
+
 //---LAY TEN USER CUA USERID---
-function getUserName(userID) {
+function getGroupName(userID) {
   (async () => {
+    //CHƯA CÓ
     const rawResponse = await fetch("http://127.0.0.1:4000/login", {
       method: "POST",
       headers: {
@@ -310,6 +335,7 @@ function getUserName(userID) {
     console.log(content);
     let mydata = JSON.parse(content);
     console.log(mydata.displayName);
+    return mydata.displayName;
   })();
 }
 
@@ -375,32 +401,37 @@ chat_input.addEventListener("keyup", function (event) {
 //---NHAN TIN---
 function sendMessage() {
   let message = chat_input.value;
-  let currentdate = new Date();
-  let userID = getCookie("userId");
-  let formatted_cdate =
-    currentdate.getDate() +
-    "/" +
-    (currentdate.getMonth() + 1) +
-    "/" +
-    currentdate.getFullYear() +
-    " " +
-    currentdate.getHours() +
-    ":" +
-    currentdate.getMinutes() +
-    ":" +
-    currentdate.getSeconds();
-  // socket.emit("send-chat-message", {
-  //   room: current_group,
-  //   message: message,
-  //   time: formatted_cdate,
-  // });
-  chat_input.value = "";
-  let ul = document.getElementById("chat-space");
-  ul.appendChild(AppendMessage("", userID, message, "", formatted_cdate));
+  if (message.trim().length === 0) {
+    console.log("");
+  } else {
+    let currentdate = new Date();
+    let userID = getCookie("userId");
+    let formatted_cdate =
+      currentdate.getDate() +
+      "/" +
+      (currentdate.getMonth() + 1) +
+      "/" +
+      currentdate.getFullYear() +
+      " " +
+      currentdate.getHours() +
+      ":" +
+      currentdate.getMinutes() +
+      ":" +
+      currentdate.getSeconds();
+    // socket.emit("send-chat-message", {
+    //   room: current_group,
+    //   message: message,
+    //   time: formatted_cdate,
+    // });
+    chat_input.value = "";
+    let ul = document.getElementById("chat-space");
+    ul.appendChild(AppendMessage("", userID, message, "", formatted_cdate));
+    var elem = document.getElementById("chat-space");
+    elem.scrollTop = elem.scrollHeight;
+  }
 }
 
-
-//---KIEM TRA SU TON TAI CUA GROUP, SUA THONG TIN, THEM GROUP MOI---
+//---KIEM TRA SU TON TAI CUA GROUP, SUA THONG TIN, THEM GROUP MOI, KHI TIN NHAN DEN---
 function appendMessageNavigationChecked(group_id, message, sender_id, time) {
   const navigationList = document.getElementById("list-message");
   let listOfli = navigationList.querySelectorAll("li");
@@ -422,4 +453,81 @@ function appendMessageNavigationChecked(group_id, message, sender_id, time) {
   } else {
     AddMessageNav(group_id, getGroupName(group_id), message, time);
   }
+}
+//---KIEM TRA SU TON TAI CUA GROUP, SUA THONG TIN, THEM GROUP MOI, KHI TIN NHAN DI---
+function MessageCheckExist(
+  group_id,
+  group_name,
+  last_message,
+  last_message_time
+) {
+  const navigationList = document.getElementById("list-message");
+  let listOfli = navigationList.querySelectorAll("li");
+  let liIdList = [];
+  listOfli.forEach((li) => {
+    liIdList.push(li.id);
+  });
+  if (liIdList.includes(group_id)) {
+    let li = document.getElementById(group_id);
+    let h4 = li.querySelector("h4");
+    let h6s = li.querySelectorAll("h6");
+
+    h4.textContent = group_name;
+    h6s[0].textContent = last_message_time;
+    h6s[1].textContent = last_message;
+    let span = li.querySelector("span");
+    span.textContent = "";
+    span.style.display = "";
+  } else {
+    AddMessageNav(group_id, group_name, message, time);
+  }
+}
+
+function connectUser(userID) {
+  return function () {
+    let myDiv = document.getElementById("myUL");
+    myDiv.style.display = "none";
+    //CHƯA CÓ
+    (async () => {
+      // const rawResponse = await fetch("/msg/connect/"+userID, {
+      //   method: "GET",
+      //   headers: {
+      //     Accept: "application/json",
+      //     "Content-Type": "application/json",
+      //   },
+      // });
+      // const content = await rawResponse.json();
+      // console.log(content);
+      // let mydata = JSON.parse(content);
+      mydata = {
+        group_id: "22222222",
+        group_name: "hello",
+        last_message: "hi",
+        last_message_time: "hi",
+      };
+      MessageCheckExist(
+        mydata.group_id,
+        mydata.group_name,
+        mydata.last_message,
+        mydata.last_message_time
+      );
+      ChangeGroup(mydata.group_id)();
+    })();
+  };
+}
+
+function findUser(userId) {
+  (async () => {
+    const rawResponse = await fetch("http://127.0.0.1:5500/user/info/"+userId, {
+      method: "GET",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+    });
+    const content = await rawResponse.json();
+    console.log(content);
+    let mydata = JSON.parse(content);
+    return mydata;
+  })();
 }

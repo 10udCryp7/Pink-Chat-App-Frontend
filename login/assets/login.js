@@ -5,7 +5,7 @@ function Login() {
   // console.log("Pass: ", password)
 
   (async () => {
-    const rawResponse = await fetch("http://42.112.154.30:4000/login", {
+    const rawResponse = await fetch("http://127.0.0.1:5500/api/v1/auth/login", {
       method: "POST",
       headers: {
         Accept: "application/json",
@@ -16,8 +16,7 @@ function Login() {
     const content = await rawResponse.json();
 
     console.log(content);
-    var mydata = JSON.parse(content);
-    const accessToken = mydata.accessToken;
+    const accessToken = content.accessToken;
     console.log(accessToken);
     var cookieName = "accessToken";
     var cookieValue = accessToken;
@@ -33,14 +32,6 @@ function Login() {
     if (typeof accessToken != undefined) {
       location.replace("../chat/index.html");
     }
-    // if (CheckLogin(content))
-    // {
-    //   location.replace("../chat/index.html")
-    // }
   })();
 }
 
-// function CheckLogin(content)
-// {
-
-// }
