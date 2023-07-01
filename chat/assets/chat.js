@@ -1,5 +1,5 @@
-var currentGroup;
-var currentUserId;
+var currentGroup = "";
+var currentUserId = "";
 var accessToken = getCookie("accessToken");
 (async () => {
   const rawResponse = await fetch("http://127.0.0.1:5500/api/v1/user/info", {
@@ -276,6 +276,7 @@ function GetSearch() {
         headers: {
           Accept: "application/json",
           "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`
         },
         //body: JSON.stringify({ search_detail: search_detail }),
       }
@@ -335,23 +336,25 @@ function AddIcon(userID) {
 
 //---LAY TEN USER CUA USERID---
 function getGroupName(userID) {
-  (async () => {
-    //CHƯA CÓ
-    const rawResponse = await fetch("http://127.0.0.1:4000/login", {
-      method: "POST",
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ id: userID }),
-    });
-    const content = await rawResponse.json();
+  return "Group Name Not Finished";
+  //(async () => {
+  //  //CHƯA CÓ
+  //  const rawResponse = await fetch("http://127.0.0.1:5500/login", {
+  //    method: "POST",
+  //    headers: {
+  //      Accept: "application/json",
+  //      "Content-Type": "application/json",
+  //    },
+  //    body: JSON.stringify({ id: userID }),
+  //    Authorization: `Bearer ${accessToken}`
+  //  });
+  //  const content = await rawResponse.json();
 
-    console.log(content);
-    let mydata = JSON.parse(content);
-    console.log(mydata.displayName);
-    return mydata.displayName;
-  })();
+  //  console.log(content);
+  //  let mydata = JSON.parse(content);
+  //  console.log(mydata.displayName);
+  //  return mydata.displayName;
+  //})();
 }
 
 //---AN KET QUA TIM KIEM---
@@ -390,7 +393,9 @@ const socket = io("http://127.0.0.1:6600");
 
 var socketConnected = false;
 
-socket.emit("authenticate", getCookie("accessToken"));
+socket.emit("authenticate", {
+  accessToken: accessToken
+});
 
 const chat_input = document.getElementById("chat_input");
 
@@ -404,7 +409,6 @@ chat_input.addEventListener("keyup", function (event) {
 socket.on("authenticate-done", setSocketStatus());
 
 function setSocketStatus() {
-  alert("Hello")
   socketConnected = true;
 }
 
@@ -422,7 +426,7 @@ socket.on("new-message", (data) => {
     data.message.senderUserId,
     data.message.datetime
   );
-  if (data.groupId == current_group) {
+  if (data.groupId == currentGroup) {
     AppendMessage(
       "",
       data.message.senderUserId,
@@ -560,6 +564,7 @@ function findUser(userId) {
         headers: {
           Accept: "application/json",
           "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`
         },
       }
     );
