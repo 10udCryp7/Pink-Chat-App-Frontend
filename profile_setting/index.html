@@ -29,13 +29,13 @@
                       alt="Maxwell Admin"
                     />
                   </div>
-                  <h5 class="user-name">Yuki Hayashi</h5>
-                  <h6 class="user-email">yuki@Maxwell.com</h6>
+                  <h5 class="user-name" id="user-name">Yuki Hayashi</h5>
+                  <h6 class="user-email" id="user-email">yuki@Maxwell.com</h6>
                 </div>
                 <div class="about">
                   <h5>About</h5>
                   <p>
-                    I'm Yuki. Full Stack Designer I enjoy creating user-centric,
+                    I'm Dung. Full Stack Designer I enjoy creating user-centric,
                     delightful and human experiences.
                   </p>
                 </div>
@@ -74,17 +74,6 @@
                 </div>
                 <div class="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-12">
                   <div class="form-group">
-                    <label for="password"> Password </label>
-                    <input
-                      type="password"
-                      class="form-control"
-                      id="password"
-                      placeholder="Enter Password"
-                    />
-                  </div>
-                </div>
-                <div class="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-12">
-                  <div class="form-group">
                     <label for="password"> New Password </label>
                     <input
                       type="password"
@@ -108,6 +97,7 @@
                       id="submit"
                       name="submit"
                       class="btn btn-secondary"
+                      onclick="GoBack()"
                     >
                       Cancel
                     </button>
@@ -116,6 +106,7 @@
                       id="submit"
                       name="submit"
                       class="btn btn-primary"
+                      onclick="ProfileSetting()"
                     >
                       Update
                     </button>
@@ -128,5 +119,6 @@
       </div>
     </div>
     <script src="assets/bootstrap/js/bootstrap.min.js"></script>
+    <script src="assets/profile_setting.js"></script>
   </body>
 </html>

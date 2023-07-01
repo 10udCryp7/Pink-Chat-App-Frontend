@@ -1,4 +1,19 @@
 var currentGroup;
+var currentUserId;
+var accessToken = getCookie("accessToken");
+(async () => {
+  const rawResponse = await fetch("http://127.0.0.1:5500/api/v1/user/info", {
+    method: "GET",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+  const content = await rawResponse.json();
+  currentUserId = content._id;
+  console.log(content);
+})();
 //---LAY CAI BEN TRAI---
 getNavigation();
 function getNavigation() {
@@ -6,7 +21,7 @@ function getNavigation() {
   console.log(accessToken);
   (async () => {
     //CHƯA CÓ
-    const rawResponse = await fetch("http://127.0.0.1:4000/msg/navigation", {
+    const rawResponse = await fetch("http://127.0.0.1:5500/msg/navigation", {
       method: "GET",
       headers: {
         Accept: "application/json",
@@ -132,7 +147,7 @@ function ChangeGroup(group_id) {
         headers: {
           Accept: "application/json",
           "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken}`
+          Authorization: `Bearer ${accessToken}`,
         },
         body: JSON.stringify({ groupId: group_id }),
       });
@@ -367,34 +382,54 @@ myInput.addEventListener("keyup", function (event) {
     let myDiv = document.getElementById("myUL");
     myDiv.style.display = "";
     GetSearch();
-    // Alert the user
-    // alert("search");
   }
 });
 
-// //---SOCKET---
-// const socket = io("http://127.0.0.1:3000");
+//---SOCKET---
+const socket = io("http://127.0.0.1:6600");
 
-// socket.emit("new-user", getCookie("accessToken"));
+var socketConnected = false;
 
-// socket.on("deliver-chat-message", (data) => {
-//   //console.log(data)
-//   appendMessageNavigationChecked(
-//     data.group_id,
-//     data.message,
-//     data.sender_id,
-//     data.time
-//   );
-//   if (data.group_id == current_group) {
-//     AppendMessage("", data.sender_id, data.message, "", data.time);
-//   }
-// });
+socket.emit("authenticate", getCookie("accessToken"));
 
 const chat_input = document.getElementById("chat_input");
 
 chat_input.addEventListener("keyup", function (event) {
   if (event.key === "Enter") {
     sendMessage();
+
+  }
+});
+
+socket.on("authenticate-done", setSocketStatus());
+
+function setSocketStatus() {
+  socketConnected = true;
+}
+
+socket.on("error", (data) => {
+  let status = data.status;
+  let message = data.message;
+  alert("Status: " + status + ",message: " + message);
+});
+
+socket.on("new-message", (data) => {
+  //console.log(data)
+  appendMessageNavigationChecked(
+    data.groupId,
+    data.message.text,
+    data.message.senderUserId,
+    data.message.datetime
+  );
+  if (data.groupId == current_group) {
+    AppendMessage(
+      "",
+      data.message.senderUserId,
+      data.message.text,
+      "",
+      data.message.datetime
+    );
+    AppendMessage();
   }
 });
 
@@ -404,28 +439,27 @@ function sendMessage() {
   if (message.trim().length === 0) {
     console.log("");
   } else {
-    let currentdate = new Date();
+    (async () => {
+      const rawResponse = await fetch(
+        "http://127.0.0.1:5500/api/v1/message/send",
+        {
+          method: "POST",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify({ groupId: "649fec6db70b6e75b927add1"/*currentGroup*/, text: message }),
+        }
+      );
+      const content = await rawResponse.json();
+      console.log(content);
+    })();
     let userID = getCookie("userId");
-    let formatted_cdate =
-      currentdate.getDate() +
-      "/" +
-      (currentdate.getMonth() + 1) +
-      "/" +
-      currentdate.getFullYear() +
-      " " +
-      currentdate.getHours() +
-      ":" +
-      currentdate.getMinutes() +
-      ":" +
-      currentdate.getSeconds();
-    // socket.emit("send-chat-message", {
-    //   room: current_group,
-    //   message: message,
-    //   time: formatted_cdate,
-    // });
+
     chat_input.value = "";
     let ul = document.getElementById("chat-space");
-    ul.appendChild(AppendMessage("", userID, message, "", formatted_cdate));
+    ul.appendChild(AppendMessage("", userID, message, "", ""));
     var elem = document.getElementById("chat-space");
     elem.scrollTop = elem.scrollHeight;
   }
@@ -518,16 +552,24 @@ function connectUser(userID) {
 
 function findUser(userId) {
   (async () => {
-    const rawResponse = await fetch("http://127.0.0.1:5500/user/info/"+userId, {
-      method: "GET",
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-      },
-    });
+    const rawResponse = await fetch(
+      "http://127.0.0.1:5500/api/v1/user/info/" + userId,
+      {
+        method: "GET",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+      }
+    );
     const content = await rawResponse.json();
     console.log(content);
     let mydata = JSON.parse(content);
     return mydata;
   })();
+}
+
+function GoSetting()
+{
+  location.replace("../profile_setting/index.html");
 }
