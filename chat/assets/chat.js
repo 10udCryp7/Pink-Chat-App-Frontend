@@ -142,7 +142,7 @@ function ChangeGroup(group_id) {
       .getElementById(group_id)
       .getElementsByTagName("span")[0].style.display = "none";
     (async () => {
-      const rawResponse = await fetch("http://127.0.0.1:5500/message/list", {
+      const rawResponse = await fetch("http://127.0.0.1:5500/api/v1/message/list", {
         method: "POST",
         headers: {
           Accept: "application/json",
@@ -177,8 +177,7 @@ function ChangeGroup(group_id) {
 }
 //---THEM TIN NHAN---
 function AppendMessage(MessageID, UserID, Message, MediaID, DateTime) {
-  const userId = getCookie("userId");
-  if (UserID != userId) {
+  if (UserID != currentUserId) {
     const li = document.createElement("li");
     li.classList.add(
       "d-flex",
@@ -419,7 +418,7 @@ socket.on("error", (data) => {
 });
 
 socket.on("new-message", (data) => {
-  console.log(data)
+  console.log(data);
   appendMessageNavigationChecked(
     data.groupId,
     data.message.text,
@@ -427,14 +426,19 @@ socket.on("new-message", (data) => {
     data.message.datetime
   );
   if (data.groupId == currentGroup) {
-    AppendMessage(
-      "",
-      data.message.senderUserId,
-      data.message.text,
-      "",
-      data.message.datetime
+    alert("vua them tu socket")
+    let ul = document.getElementById("chat-space");
+    ul.appendChild(
+      AppendMessage(
+        "",
+        data.message.senderUserId,
+        data.message.text,
+        "",
+        data.message.datetime
+      )
     );
-    AppendMessage();
+    var elem = document.getElementById("chat-space");
+    elem.scrollTop = elem.scrollHeight;
   }
 });
 
@@ -460,11 +464,6 @@ function sendMessage() {
       const content = await rawResponse.json();
       console.log(content);
     })();
-    let userID = getCookie("userId");
-
-    chat_input.value = "";
-    let ul = document.getElementById("chat-space");
-    ul.appendChild(AppendMessage("", userID, message, "", ""));
     var elem = document.getElementById("chat-space");
     elem.scrollTop = elem.scrollHeight;
   }
@@ -490,7 +489,9 @@ function appendMessageNavigationChecked(group_id, message, sender_id, time) {
     span.textContent = "";
     span.style.display = "";
   } else {
-    AddMessageNav(group_id, getGroupName(group_id), message, time);
+    const ul = document.querySelector("#list-message");
+    const div = AddMessageNav(group_id, getGroupName(group_id), message, time);
+    ul.insertBefore(div, ul.firstChild);
   }
 }
 //---KIEM TRA SU TON TAI CUA GROUP, SUA THONG TIN, THEM GROUP MOI, KHI TIN NHAN DI---
@@ -579,3 +580,24 @@ function GoSetting()
 {
   location.replace("../profile_setting/index.html");
 }
+
+function getLastMessage(group_id) {
+  return new Promise(async (resolve, reject) => {
+    const rawResponse = await fetch("http://127.0.0.1:5500/api/v1/message/list", {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`
+      },
+      body: JSON.stringify({ groupId: group_id, pagination: '1' }),
+    });
+    const content = await rawResponse.json();
+    console.log(content);
+    resolve(content);
+  });
+}
+
+//getLastMessage('649febce22586dbcbe850d02').then(mydata => {
+//  //access mydata here
+//});
