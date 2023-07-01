@@ -31,3 +31,9 @@ img {
   scrollbar-width: none; /* Firefox */
   overflow-y: scroll;
 }
+
+a, u {
+  text-decoration: none;
+  color:black;
+  
+}
