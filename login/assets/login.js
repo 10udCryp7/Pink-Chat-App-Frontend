@@ -5,7 +5,7 @@ function Login() {
   // console.log("Pass: ", password)
 
   (async () => {
-    const rawResponse = await axios("http://127.0.0.1:5500/api/v1/auth/login", {
+    const rawResponse = await fetch("http://127.0.0.1:5500/api/v1/auth/login", {
       method: "POST",
       headers: {
         Accept: "application/json",

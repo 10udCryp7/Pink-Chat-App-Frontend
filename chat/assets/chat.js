@@ -1,5 +1,5 @@
-var currentGroup;
-var currentUserId;
+var currentGroup = "";
+var currentUserId = "";
 var accessToken = getCookie("accessToken");
 (async () => {
   const rawResponse = await fetch("http://127.0.0.1:5500/api/v1/user/info", {
@@ -21,31 +21,42 @@ function getNavigation() {
   console.log(accessToken);
   (async () => {
     //CHƯA CÓ
-    const rawResponse = await fetch("http://127.0.0.1:5500/msg/navigation", {
-      method: "GET",
+    const rawResponse = await fetch("http://127.0.0.1:5500/api/v1/group/list", {
+      method: "POST",
       headers: {
         Accept: "application/json",
         "Content-Type": "application/json",
         accessToken: accessToken,
+        Authorization: `Bearer ${accessToken}`,
       },
-      //body: JSON.stringify({email: email, password: password})
     });
-    const content = await rawResponse.json();
-    let mydata = JSON.parse(content);
+    const mydata = await rawResponse.json();
 
-    const data = mydata.data;
-    console.log(data);
+    console.log(mydata.list[0]);
 
     const ul = document.querySelector("#list-message");
-    for (let i = 0; i < data.length; i++) {
-      const div = AddMessageNav(
-        data[i].group_id,
-        data[i].group_name,
-        data[i].last_message,
-        data[i].last_message_time
-      );
-      ul.insertBefore(div, ul.firstChild);
+    for (let i = 0; i < mydata.list.length; i++) {
+      getLastMessage(mydata.list[i]._id).then((data) => {
+        const text = data.list[i].text;
+        const datetime = data.list[i].datetime;
+        const div = AddMessageNav(
+          mydata.list[i]._id,
+          mydata.list[i].name,
+          text,
+          datetime
+        );
+        ul.insertBefore(div, ul.firstChild);
+      });
     }
+    // for (let i = 0; i < data.length; i++) {
+    //   const div = AddMessageNav(
+    //     mydata[i].group_id,
+    //     mydata[i].group_name,
+    //     mydata[i].last_message,
+    //     mydata[i].last_message_time
+    //   );
+    //   ul.insertBefore(div, ul.firstChild);
+    // }
   })();
 }
 
@@ -142,17 +153,19 @@ function ChangeGroup(group_id) {
       .getElementById(group_id)
       .getElementsByTagName("span")[0].style.display = "none";
     (async () => {
-      const rawResponse = await fetch("http://127.0.0.1:5500/message/list", {
-        method: "POST",
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken}`,
-        },
-        body: JSON.stringify({ groupId: group_id }),
-      });
-      const content = await rawResponse.json();
-      let mydata = JSON.parse(content);
+      const rawResponse = await fetch(
+        "http://127.0.0.1:5500/api/v1/message/list",
+        {
+          method: "POST",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify({ groupId: group_id }),
+        }
+      );
+      const mydata = await rawResponse.json();
       console.log(mydata);
       let groupName = getGroupName(group_id);
       document.getElementById("friendName").innerHTML = groupName;
@@ -177,8 +190,7 @@ function ChangeGroup(group_id) {
 }
 //---THEM TIN NHAN---
 function AppendMessage(MessageID, UserID, Message, MediaID, DateTime) {
-  const userId = getCookie("userId");
-  if (UserID != userId) {
+  if (UserID != currentUserId) {
     const li = document.createElement("li");
     li.classList.add(
       "d-flex",
@@ -270,27 +282,26 @@ function GetSearch() {
   (async () => {
     //CHƯA CÓ
     const rawResponse = await fetch(
-      "http://127.0.0.1:4000/msg/find/" + search_detail,
+      "http://127.0.0.1:5500/api/v1/user/list_all",
       {
-        method: "GET",
+        method: "POST",
         headers: {
           Accept: "application/json",
           "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
         },
-        //body: JSON.stringify({ search_detail: search_detail }),
+        body: JSON.stringify({ fullNameContains: search_detail }),
       }
     );
     const content = await rawResponse.json();
-
     console.log(content);
-    let mydata = JSON.parse(content);
-    const data = mydata.data;
+    const data = content.list;
     for (let i = 0; i < data.length; i++) {
-      const li = AddSearch(data[i].userName);
+      const li = AddSearch(data[i].fullName);
       const ul = document.getElementById("myUL");
       const div = document.createElement("div");
       div.appendChild(li);
-      div.appendChild(AddIcon(data[i].userID));
+      div.appendChild(AddIcon(data[i]._id));
       const firstLi = ul.firstChild;
       div.addEventListener("mouseover", function () {
         this.style.backgroundColor = "white";
@@ -335,23 +346,25 @@ function AddIcon(userID) {
 
 //---LAY TEN USER CUA USERID---
 function getGroupName(userID) {
-  (async () => {
-    //CHƯA CÓ
-    const rawResponse = await fetch("http://127.0.0.1:4000/login", {
-      method: "POST",
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ id: userID }),
-    });
-    const content = await rawResponse.json();
+  return "Group Name Not Finished";
+  //(async () => {
+  //  //CHƯA CÓ
+  //  const rawResponse = await fetch("http://127.0.0.1:5500/login", {
+  //    method: "POST",
+  //    headers: {
+  //      Accept: "application/json",
+  //      "Content-Type": "application/json",
+  //    },
+  //    body: JSON.stringify({ id: userID }),
+  //    Authorization: `Bearer ${accessToken}`
+  //  });
+  //  const content = await rawResponse.json();
 
-    console.log(content);
-    let mydata = JSON.parse(content);
-    console.log(mydata.displayName);
-    return mydata.displayName;
-  })();
+  //  console.log(content);
+  //  let mydata = JSON.parse(content);
+  //  console.log(mydata.displayName);
+  //  return mydata.displayName;
+  //})();
 }
 
 //---AN KET QUA TIM KIEM---
@@ -390,14 +403,15 @@ const socket = io("http://127.0.0.1:6600");
 
 var socketConnected = false;
 
-socket.emit("authenticate", getCookie("accessToken"));
+socket.emit("authenticate", {
+  accessToken: accessToken,
+});
 
 const chat_input = document.getElementById("chat_input");
 
 chat_input.addEventListener("keyup", function (event) {
   if (event.key === "Enter") {
     sendMessage();
-
   }
 });
 
@@ -414,22 +428,27 @@ socket.on("error", (data) => {
 });
 
 socket.on("new-message", (data) => {
-  //console.log(data)
+  console.log(data);
   appendMessageNavigationChecked(
     data.groupId,
     data.message.text,
     data.message.senderUserId,
     data.message.datetime
   );
-  if (data.groupId == current_group) {
-    AppendMessage(
-      "",
-      data.message.senderUserId,
-      data.message.text,
-      "",
-      data.message.datetime
+  if (data.groupId == currentGroup) {
+    alert("vua them tu socket");
+    let ul = document.getElementById("chat-space");
+    ul.appendChild(
+      AppendMessage(
+        "",
+        data.message.senderUserId,
+        data.message.text,
+        "",
+        data.message.datetime
+      )
     );
-    AppendMessage();
+    var elem = document.getElementById("chat-space");
+    elem.scrollTop = elem.scrollHeight;
   }
 });
 
@@ -449,17 +468,15 @@ function sendMessage() {
             "Content-Type": "application/json",
             Authorization: `Bearer ${accessToken}`,
           },
-          body: JSON.stringify({ groupId: "649fec6db70b6e75b927add1"/*currentGroup*/, text: message }),
+          body: JSON.stringify({
+            groupId: "649febce22586dbcbe850d02" /*currentGroup*/,
+            text: message,
+          }),
         }
       );
       const content = await rawResponse.json();
       console.log(content);
     })();
-    let userID = getCookie("userId");
-
-    chat_input.value = "";
-    let ul = document.getElementById("chat-space");
-    ul.appendChild(AppendMessage("", userID, message, "", ""));
     var elem = document.getElementById("chat-space");
     elem.scrollTop = elem.scrollHeight;
   }
@@ -485,7 +502,9 @@ function appendMessageNavigationChecked(group_id, message, sender_id, time) {
     span.textContent = "";
     span.style.display = "";
   } else {
-    AddMessageNav(group_id, getGroupName(group_id), message, time);
+    const ul = document.querySelector("#list-message");
+    const div = AddMessageNav(group_id, getGroupName(group_id), message, time);
+    ul.insertBefore(div, ul.firstChild);
   }
 }
 //---KIEM TRA SU TON TAI CUA GROUP, SUA THONG TIN, THEM GROUP MOI, KHI TIN NHAN DI---
@@ -559,6 +578,7 @@ function findUser(userId) {
         headers: {
           Accept: "application/json",
           "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
         },
       }
     );
@@ -569,7 +589,30 @@ function findUser(userId) {
   })();
 }
 
-function GoSetting()
-{
+function GoSetting() {
   location.replace("../profile_setting/index.html");
 }
+
+function getLastMessage(group_id) {
+  return new Promise(async (resolve, reject) => {
+    const rawResponse = await fetch(
+      "http://127.0.0.1:5500/api/v1/message/list",
+      {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({ groupId: group_id, pagination: "1" }),
+      }
+    );
+    const content = await rawResponse.json();
+    console.log(content);
+    resolve(content);
+  });
+}
+
+// getLastMessage('649febce22586dbcbe850d02').then(mydata => {
+//  //access mydata here
+// });
