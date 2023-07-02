@@ -187,9 +187,6 @@ function ChangeGroup(group_id) {
         groupName = mydata_1.name
       })
       document.getElementById("friendName").innerHTML = groupName;
-      for (let i = 0; i < mydata.list.length; i++) {
-        console.log(mydata.list[i]);
-      }
       const ul = document.getElementById("chat-space");
       for (let i = 0; i < mydata.list.length; i++) {
         const li2 = AppendMessage(
