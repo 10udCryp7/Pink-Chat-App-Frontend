@@ -36,16 +36,28 @@ function getNavigation() {
 
     const ul = document.querySelector("#list-message");
     for (let i = 0; i < mydata.list.length; i++) {
-      getLastMessage(mydata.list[i]._id).then((data) => {
-        const text = data.list[i].text;
-        const datetime = data.list[i].datetime;
-        const div = AddMessageNav(
-          mydata.list[i]._id,
-          mydata.list[i].name,
-          text,
-          datetime
-        );
-        ul.insertBefore(div, ul.firstChild);
+      await Promise.all([getLastMessage(mydata.list[i]._id), getGroupInfo(mydata.list[i]._id)]).then(([data, mydata_1]) => {
+        var groupName = mydata_1.name;
+        if (data.list.length === 0) {
+          const div = AddMessageNav(
+            mydata.list[i]._id,
+            groupName,
+            "Empty",
+            "Empty"
+          );
+          ul.insertBefore(div, ul.firstChild);
+        }
+        else {
+          const text = data.list[0].text;
+          const datetime = data.list[0].datetime;
+          const div = AddMessageNav(
+            mydata.list[i]._id,
+            groupName,
+            text,
+            datetime
+          );
+          ul.insertBefore(div, ul.firstChild);
+        }
       });
     }
     // for (let i = 0; i < data.length; i++) {
@@ -84,7 +96,9 @@ function AddMessageNav(group_id, group_name, last_message, last_message_time) {
   li.style.cursor = "pointer";
   li.id = group_id;
   console.log(group_id);
-  li.addEventListener("click", ChangeGroup(group_id));
+  li.addEventListener("click", () => {
+    ChangeGroup(group_id)()
+  });
 
   const div = document.createElement("div");
   div.classList.add("card", "border-0");
@@ -167,7 +181,11 @@ function ChangeGroup(group_id) {
       );
       const mydata = await rawResponse.json();
       console.log(mydata);
-      let groupName = getGroupInfo(group_id).name;
+
+      var groupName = "";
+      await getGroupInfo(group_id).then(mydata_1 => {
+        groupName = mydata_1.name
+      })
       document.getElementById("friendName").innerHTML = groupName;
       for (let i = 0; i < mydata.list.length; i++) {
         console.log(mydata.list[i]);
@@ -313,8 +331,8 @@ function GetSearch() {
           this.style.backgroundColor = "lightgray";
         });
         ul.insertBefore(div, firstLi);
-      // ul.insertBefore(li, firstLi);
-      // ul.insertBefore(AddIcon(data[i].userID), firstLi);
+        // ul.insertBefore(li, firstLi);
+        // ul.insertBefore(AddIcon(data[i].userID), firstLi);
       }
     }
   })();
@@ -346,27 +364,35 @@ function AddIcon(userID) {
   return li2;
 }
 
-//---LAY TEN USER CUA USERID---
-function getGroupInfo(userID) {
-  return "Group Name Not Finished";
-  //(async () => {
-  //  //CHƯA CÓ
-  //  const rawResponse = await fetch("http://127.0.0.1:5500/login", {
-  //    method: "POST",
-  //    headers: {
-  //      Accept: "application/json",
-  //      "Content-Type": "application/json",
-  //    },
-  //    body: JSON.stringify({ id: userID }),
-  //    Authorization: `Bearer ${accessToken}`
-  //  });
-  //  const content = await rawResponse.json();
-
-  //  console.log(content);
-  //  let mydata = JSON.parse(content);
-  //  console.log(mydata.displayName);
-  //  return mydata.displayName;
-  //})();
+//---LAY THONG TIN GROUP---
+function getGroupInfo(groupId) {
+  return new Promise(async (resolve, reject) => {
+    const rawResponse = await fetch(
+      "http://127.0.0.1:5500/api/v1/group/info/" + groupId,
+      {
+        method: "GET",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    var mydata = await rawResponse.json();
+    var groupName = mydata.name;
+    if (groupName.trim().length === 0) {
+      for (let i = 0; i < mydata.users.length; i++) {
+        if (mydata.users[i].userId != currentUserId) {
+          await getUserInfo(mydata.users[i].userId).then(data => {
+            groupName += data.fullName + ', ';
+          });
+        }
+      }
+      groupName = groupName.slice(0, -2);
+      mydata.name = groupName
+    }
+    resolve(mydata);
+  });
+  
 }
 
 //---AN KET QUA TIM KIEM---
@@ -438,7 +464,7 @@ socket.on("new-message", (data) => {
     data.message.datetime
   );
   if (data.groupId == currentGroup) {
-    alert("vua them tu socket");
+    //alert("vua them tu socket");
     let ul = document.getElementById("chat-space");
     ul.appendChild(
       AppendMessage(
@@ -471,7 +497,7 @@ function sendMessage() {
             Authorization: `Bearer ${accessToken}`,
           },
           body: JSON.stringify({
-            groupId: "649febce22586dbcbe850d02" /*currentGroup*/,
+            groupId: currentGroup,
             text: message,
           }),
         }
@@ -505,7 +531,12 @@ function appendMessageNavigationChecked(group_id, message, sender_id, time) {
     span.style.display = "";
   } else {
     const ul = document.querySelector("#list-message");
-    const div = AddMessageNav(group_id, getGroupInfo(group_id).name, message, time);
+    const div = AddMessageNav(
+      group_id,
+      getGroupInfo(group_id).name,
+      message,
+      time
+    );
     ul.insertBefore(div, ul.firstChild);
   }
 }
@@ -561,8 +592,8 @@ function connectUser(userID) {
           arr.push(members[0].userId)
           arr.push(members[1].userId)
           if (arr.includes(userID) && arr.includes(currentUserId)) {
-            alert(1)
             test = true;
+            ChangeGroup(mydata.list[i]._id)()
           }
         }
       }
@@ -591,20 +622,17 @@ function connectUser(userID) {
             }),
           });
           const mydata = await rawResponse.json();
-          console.log(mydata)
+          MessageCheckExist(
+            mydata._id,
+            mydata.name,
+            "Empty",
+            "Empty"
+          );
+          ChangeGroup(mydata._id)();
         })();
       }
-      // for (let i = 0; i < data.length; i++) {
-      //   const div = AddMessageNav(
-      //     mydata[i].group_id,
-      //     mydata[i].group_name,
-      //     mydata[i].last_message,
-      //     mydata[i].last_message_time
-      //   );
-      //   ul.insertBefore(div, ul.firstChild);
-      // }
     })();
-    
+
     //(async () => {
     //  // const rawResponse = await fetch("/msg/connect/"+userID, {
     //  //   method: "GET",
@@ -633,25 +661,22 @@ function connectUser(userID) {
   };
 }
 
-
-function findUser(userId) {
-  (async () => {
+function getUserInfo(id) {
+  return new Promise(async (resolve, reject) => {
     const rawResponse = await fetch(
-      "http://127.0.0.1:5500/api/v1/user/info/" + userId,
+      "http://127.0.0.1:5500/api/v1/user/info/" + id,
       {
         method: "GET",
         headers: {
           Accept: "application/json",
           "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken}`,
         },
       }
     );
-    const content = await rawResponse.json();
-    console.log(content);
-    let mydata = JSON.parse(content);
-    return mydata;
-  })();
+    const mydata = await rawResponse.json();
+    console.log(mydata);
+    resolve(mydata);
+  });
 }
 
 function GoSetting() {
