@@ -15,37 +15,48 @@ var accessToken = getCookie("accessToken");
   console.log(content);
 })();
 //---LAY CAI BEN TRAI---
-//getNavigation();
+getNavigation();
 function getNavigation() {
   const accessToken = getCookie("accessToken");
   console.log(accessToken);
   (async () => {
     //CHƯA CÓ
-    const rawResponse = await fetch("http://127.0.0.1:5500/msg/navigation", {
-      method: "GET",
+    const rawResponse = await fetch("http://127.0.0.1:5500/api/v1/group/list", {
+      method: "POST",
       headers: {
         Accept: "application/json",
         "Content-Type": "application/json",
         accessToken: accessToken,
+        Authorization: `Bearer ${accessToken}`,
       },
-      //body: JSON.stringify({email: email, password: password})
     });
-    const content = await rawResponse.json();
-    let mydata = JSON.parse(content);
+    const mydata = await rawResponse.json();
 
-    const data = mydata.data;
-    console.log(data);
+    console.log(mydata.list[0]);
 
     const ul = document.querySelector("#list-message");
-    for (let i = 0; i < data.length; i++) {
-      const div = AddMessageNav(
-        data[i].group_id,
-        data[i].group_name,
-        data[i].last_message,
-        data[i].last_message_time
-      );
-      ul.insertBefore(div, ul.firstChild);
+    for (let i = 0; i < mydata.list.length; i++) {
+      getLastMessage(mydata.list[i]._id).then((data) => {
+        const text = data.list[i].text;
+        const datetime = data.list[i].datetime;
+        const div = AddMessageNav(
+          mydata.list[i]._id,
+          mydata.list[i].name,
+          text,
+          datetime
+        );
+        ul.insertBefore(div, ul.firstChild);
+      });
     }
+    // for (let i = 0; i < data.length; i++) {
+    //   const div = AddMessageNav(
+    //     mydata[i].group_id,
+    //     mydata[i].group_name,
+    //     mydata[i].last_message,
+    //     mydata[i].last_message_time
+    //   );
+    //   ul.insertBefore(div, ul.firstChild);
+    // }
   })();
 }
 
@@ -142,17 +153,19 @@ function ChangeGroup(group_id) {
       .getElementById(group_id)
       .getElementsByTagName("span")[0].style.display = "none";
     (async () => {
-      const rawResponse = await fetch("http://127.0.0.1:5500/api/v1/message/list", {
-        method: "POST",
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken}`,
-        },
-        body: JSON.stringify({ groupId: group_id }),
-      });
-      const content = await rawResponse.json();
-      let mydata = JSON.parse(content);
+      const rawResponse = await fetch(
+        "http://127.0.0.1:5500/api/v1/message/list",
+        {
+          method: "POST",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify({ groupId: group_id }),
+        }
+      );
+      const mydata = await rawResponse.json();
       console.log(mydata);
       let groupName = getGroupName(group_id);
       document.getElementById("friendName").innerHTML = groupName;
@@ -162,8 +175,8 @@ function ChangeGroup(group_id) {
       const ul = document.getElementById("chat-space");
       for (let i = 0; i < mydata.list.length; i++) {
         const li2 = AppendMessage(
-          mydata.list[i].id,
-          mydata.list[i].sender,
+          mydata.list[i]._id,
+          mydata.list[i].senderUserId,
           mydata.list[i].text,
           mydata.list[i].mediaID,
           mydata.list[i].datetime
@@ -269,28 +282,26 @@ function GetSearch() {
   (async () => {
     //CHƯA CÓ
     const rawResponse = await fetch(
-      "http://127.0.0.1:4000/msg/find/" + search_detail,
+      "http://127.0.0.1:5500/api/v1/user/list_all",
       {
-        method: "GET",
+        method: "POST",
         headers: {
           Accept: "application/json",
           "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken}`
+          Authorization: `Bearer ${accessToken}`,
         },
-        //body: JSON.stringify({ search_detail: search_detail }),
+        body: JSON.stringify({ fullNameContains: search_detail }),
       }
     );
     const content = await rawResponse.json();
-
     console.log(content);
-    let mydata = JSON.parse(content);
-    const data = mydata.data;
+    const data = content.list;
     for (let i = 0; i < data.length; i++) {
-      const li = AddSearch(data[i].userName);
+      const li = AddSearch(data[i].fullName);
       const ul = document.getElementById("myUL");
       const div = document.createElement("div");
       div.appendChild(li);
-      div.appendChild(AddIcon(data[i].userID));
+      div.appendChild(AddIcon(data[i]._id));
       const firstLi = ul.firstChild;
       div.addEventListener("mouseover", function () {
         this.style.backgroundColor = "white";
@@ -393,7 +404,7 @@ const socket = io("http://127.0.0.1:6600");
 var socketConnected = false;
 
 socket.emit("authenticate", {
-  accessToken: accessToken
+  accessToken: accessToken,
 });
 
 const chat_input = document.getElementById("chat_input");
@@ -401,7 +412,6 @@ const chat_input = document.getElementById("chat_input");
 chat_input.addEventListener("keyup", function (event) {
   if (event.key === "Enter") {
     sendMessage();
-
   }
 });
 
@@ -426,7 +436,7 @@ socket.on("new-message", (data) => {
     data.message.datetime
   );
   if (data.groupId == currentGroup) {
-    alert("vua them tu socket")
+    alert("vua them tu socket");
     let ul = document.getElementById("chat-space");
     ul.appendChild(
       AppendMessage(
@@ -458,7 +468,10 @@ function sendMessage() {
             "Content-Type": "application/json",
             Authorization: `Bearer ${accessToken}`,
           },
-          body: JSON.stringify({ groupId: "649febce22586dbcbe850d02"/*currentGroup*/, text: message }),
+          body: JSON.stringify({
+            groupId: "649febce22586dbcbe850d02" /*currentGroup*/,
+            text: message,
+          }),
         }
       );
       const content = await rawResponse.json();
@@ -565,7 +578,7 @@ function findUser(userId) {
         headers: {
           Accept: "application/json",
           "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken}`
+          Authorization: `Bearer ${accessToken}`,
         },
       }
     );
@@ -576,28 +589,30 @@ function findUser(userId) {
   })();
 }
 
-function GoSetting()
-{
+function GoSetting() {
   location.replace("../profile_setting/index.html");
 }
 
 function getLastMessage(group_id) {
   return new Promise(async (resolve, reject) => {
-    const rawResponse = await fetch("http://127.0.0.1:5500/api/v1/message/list", {
-      method: "POST",
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${accessToken}`
-      },
-      body: JSON.stringify({ groupId: group_id, pagination: '1' }),
-    });
+    const rawResponse = await fetch(
+      "http://127.0.0.1:5500/api/v1/message/list",
+      {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({ groupId: group_id, pagination: "1" }),
+      }
+    );
     const content = await rawResponse.json();
     console.log(content);
     resolve(content);
   });
 }
 
-//getLastMessage('649febce22586dbcbe850d02').then(mydata => {
+// getLastMessage('649febce22586dbcbe850d02').then(mydata => {
 //  //access mydata here
-//});
+// });
