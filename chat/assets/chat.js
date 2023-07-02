@@ -167,7 +167,9 @@ function ChangeGroup(group_id) {
       );
       const mydata = await rawResponse.json();
       console.log(mydata);
-      let groupName = getGroupName(group_id);
+      alert('truoc');
+      let groupName = getGroupInfo(group_id).name;
+      alert('sau');
       document.getElementById("friendName").innerHTML = groupName;
       for (let i = 0; i < mydata.list.length; i++) {
         console.log(mydata.list[i]);
@@ -175,8 +177,8 @@ function ChangeGroup(group_id) {
       const ul = document.getElementById("chat-space");
       for (let i = 0; i < mydata.list.length; i++) {
         const li2 = AppendMessage(
-          mydata.list[i].id,
-          mydata.list[i].sender,
+          mydata.list[i]._id,
+          mydata.list[i].senderUserId,
           mydata.list[i].text,
           mydata.list[i].mediaID,
           mydata.list[i].datetime
@@ -297,23 +299,25 @@ function GetSearch() {
     console.log(content);
     const data = content.list;
     for (let i = 0; i < data.length; i++) {
-      const li = AddSearch(data[i].fullName);
-      const ul = document.getElementById("myUL");
-      const div = document.createElement("div");
-      div.appendChild(li);
-      div.appendChild(AddIcon(data[i]._id));
-      const firstLi = ul.firstChild;
-      div.addEventListener("mouseover", function () {
-        this.style.backgroundColor = "white";
-      });
+      if (data[i]._id != currentUserId) {
+        const li = AddSearch(data[i].fullName);
+        const ul = document.getElementById("myUL");
+        const div = document.createElement("div");
+        div.appendChild(li);
+        div.appendChild(AddIcon(data[i]._id));
+        const firstLi = ul.firstChild;
+        div.addEventListener("mouseover", function () {
+          this.style.backgroundColor = "white";
+        });
 
-      // Remove the class from the div when not hovering
-      div.addEventListener("mouseout", function () {
-        this.style.backgroundColor = "lightgray";
-      });
-      ul.insertBefore(div, firstLi);
-      // ul.insertBefore(li, firstLi);
-      // ul.insertBefore(AddIcon(data[i].userID), firstLi);
+        // Remove the class from the div when not hovering
+        div.addEventListener("mouseout", function () {
+          this.style.backgroundColor = "lightgray";
+        });
+        ul.insertBefore(div, firstLi);
+        // ul.insertBefore(li, firstLi);
+        // ul.insertBefore(AddIcon(data[i].userID), firstLi);
+      }
     }
   })();
 }
@@ -344,27 +348,33 @@ function AddIcon(userID) {
   return li2;
 }
 
-//---LAY TEN USER CUA USERID---
-function getGroupName(userID) {
-  return "Group Name Not Finished";
-  //(async () => {
-  //  //CHƯA CÓ
-  //  const rawResponse = await fetch("http://127.0.0.1:5500/login", {
-  //    method: "POST",
-  //    headers: {
-  //      Accept: "application/json",
-  //      "Content-Type": "application/json",
-  //    },
-  //    body: JSON.stringify({ id: userID }),
-  //    Authorization: `Bearer ${accessToken}`
-  //  });
-  //  const content = await rawResponse.json();
-
-  //  console.log(content);
-  //  let mydata = JSON.parse(content);
-  //  console.log(mydata.displayName);
-  //  return mydata.displayName;
-  //})();
+//---LAY THONG TIN GROUP---
+function getGroupInfo(groupId) {
+  (async () => {
+    //CHƯA CÓ
+    const rawResponse = await fetch(
+      "http://127.0.0.1:5500/api/v1/group/info/" + groupId,
+      {
+        method: "GET",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    var mydata = await rawResponse.json();
+    var groupName = mydata.name;
+    if (groupName.trim().length === 0) {
+      for (let i = 0; i < mydata.users.length; i++) {
+        getUserInfo(mydata.users[i]).then(data => {
+          groupName += data.fullName + ', ';
+          
+        });
+      }
+      console.log(groupName)
+    }
+    return mydata;
+  })();
 }
 
 //---AN KET QUA TIM KIEM---
@@ -436,7 +446,7 @@ socket.on("new-message", (data) => {
     data.message.datetime
   );
   if (data.groupId == currentGroup) {
-    alert("vua them tu socket");
+    //alert("vua them tu socket");
     let ul = document.getElementById("chat-space");
     ul.appendChild(
       AppendMessage(
@@ -469,7 +479,7 @@ function sendMessage() {
             Authorization: `Bearer ${accessToken}`,
           },
           body: JSON.stringify({
-            groupId: "649febce22586dbcbe850d02" /*currentGroup*/,
+            groupId: "649fec6db70b6e75b927add1" /*currentGroup*/,
             text: message,
           }),
         }
@@ -495,7 +505,7 @@ function appendMessageNavigationChecked(group_id, message, sender_id, time) {
     let h4 = li.querySelector("h4");
     let h6s = li.querySelectorAll("h6");
 
-    h4.textContent = getGroupName(group_id);
+    h4.textContent = getGroupInfo(group_id).name;
     h6s[0].textContent = time;
     h6s[1].textContent = message;
     let span = li.querySelector("span");
@@ -503,7 +513,12 @@ function appendMessageNavigationChecked(group_id, message, sender_id, time) {
     span.style.display = "";
   } else {
     const ul = document.querySelector("#list-message");
-    const div = AddMessageNav(group_id, getGroupName(group_id), message, time);
+    const div = AddMessageNav(
+      group_id,
+      getGroupInfo(group_id).name,
+      message,
+      time
+    );
     ul.insertBefore(div, ul.firstChild);
   }
 }
@@ -540,53 +555,119 @@ function connectUser(userID) {
   return function () {
     let myDiv = document.getElementById("myUL");
     myDiv.style.display = "none";
-    //CHƯA CÓ
     (async () => {
-      // const rawResponse = await fetch("/msg/connect/"+userID, {
-      //   method: "GET",
-      //   headers: {
-      //     Accept: "application/json",
-      //     "Content-Type": "application/json",
-      //   },
-      // });
-      // const content = await rawResponse.json();
-      // console.log(content);
-      // let mydata = JSON.parse(content);
-      mydata = {
-        group_id: "22222222",
-        group_name: "hello",
-        last_message: "hi",
-        last_message_time: "hi",
-      };
-      MessageCheckExist(
-        mydata.group_id,
-        mydata.group_name,
-        mydata.last_message,
-        mydata.last_message_time
+      let test = false;
+      const rawResponse = await fetch(
+        "http://127.0.0.1:5500/api/v1/group/list",
+        {
+          method: "POST",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+            accessToken: accessToken,
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
       );
-      ChangeGroup(mydata.group_id)();
+      const mydata = await rawResponse.json();
+      for (let i = 0; i < mydata.list.length; i++) {
+        let members = mydata.list[i].users;
+        if (members.length === 2) {
+          let arr = [];
+          arr.push(members[0].userId);
+          arr.push(members[1].userId);
+          if (arr.includes(userID) && arr.includes(currentUserId)) {
+            alert(1);
+            test = true;
+          }
+        }
+      }
+      if (test == false) {
+        (async () => {
+          const rawResponse = await fetch(
+            "http://127.0.0.1:5500/api/v1/group/create",
+            {
+              method: "POST",
+              headers: {
+                Accept: "application/json",
+                "Content-Type": "application/json",
+                accessToken: accessToken,
+                Authorization: `Bearer ${accessToken}`,
+              },
+              body: JSON.stringify({
+                name: "",
+                users: [
+                  {
+                    userId: userID,
+                    isAdmin: false,
+                  },
+                  {
+                    userId: currentUserId,
+                    isAdmin: false,
+                  },
+                ],
+              }),
+            }
+          );
+          const mydata = await rawResponse.json();
+          console.log(mydata);
+        })();
+      }
+      // for (let i = 0; i < data.length; i++) {
+      //   const div = AddMessageNav(
+      //     mydata[i].group_id,
+      //     mydata[i].group_name,
+      //     mydata[i].last_message,
+      //     mydata[i].last_message_time
+      //   );
+      //   ul.insertBefore(div, ul.firstChild);
+      // }
     })();
+
+    // (async () => {
+    //  // const rawResponse = await fetch("/msg/connect/"+userID, {
+    //  //   method: "",
+    //  //   headers: {
+    //  //     Accept: "application/json",
+    //  //     "Content-Type": "application/json",
+    //  //   },
+    //  // });
+    //  // const content = await rawResponse.json();
+    //  // console.log(content);
+    //  // let mydata = JSON.parse(content);
+    //  mydata = {
+    //    group_id: "22222222",
+    //    group_name: "hello",
+    //    last_message: "hi",
+    //    last_message_time: "hi",
+    //  };
+    //  MessageCheckExist(
+    //    mydata.group_id,
+    //    mydata.group_name,
+    //    mydata.last_message,
+    //    mydata.last_message_time
+    //  );
+    //  ChangeGroup(mydata.group_id)();
+    // })();
   };
 }
 
-function findUser(userId) {
-  (async () => {
+function getUserInfo(id) {;
+  return new Promise(async (resolve, reject) => {
     const rawResponse = await fetch(
-      "http://127.0.0.1:5500/api/v1/user/info/" + userId,
+      "http://127.0.0.1:5500/api/v1/user/info/" + id,
       {
         method: "GET",
         headers: {
           Accept: "application/json",
           "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken}`,
         },
       }
     );
-    const content = await rawResponse.json();
-    console.log(content);
-    let mydata = JSON.parse(content);
-    return mydata;
-  })();
+    const mydata = await rawResponse.json();
+    console.log(mydata);
+    resolve(mydata);
+  });
 }
 
 function GoSetting() {
