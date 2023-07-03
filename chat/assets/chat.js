@@ -41,7 +41,7 @@ function getNavigation() {
       await Promise.all([getLastMessage(mydata.list[i]._id), getGroupInfo(mydata.list[i]._id)]).then(([data, mydata_1]) => {
         var groupName = mydata_1.name;
         if (data.list.length === 0) {
-          const div = AddMessageNav(
+          const div = AddSemiMessageNav(
             mydata.list[i]._id,
             groupName,
             "Empty",
@@ -52,7 +52,7 @@ function getNavigation() {
         else {
           const text = data.list[0].text;
           const datetime = new Date(Date.parse(data.list[0].datetime));
-          const div = AddMessageNav(
+          const div = AddSemiMessageNav(
             mydata.list[i]._id,
             groupName,
             text,
@@ -92,7 +92,7 @@ function getCookie(cname) {
 }
 
 //---THEM GROUP VAO NAV---
-function AddMessageNav(group_id, group_name, last_message, last_message_time) {
+function AddSemiMessageNav(group_id, group_name, last_message, last_message_time) {
   const li = document.createElement("li");
 
   li.style.cursor = "pointer";
@@ -330,8 +330,25 @@ function GetSearch() {
         const li = AddSearch(data[i].fullName);
         const ul = document.getElementById("myUL");
         const div = document.createElement("div");
+
+        let li2 = document.createElement("li");
+        li2.setAttribute("class", "col-2");
+        li2.setAttribute("style", "display: inline-block");
+
+        let img = document.createElement("img");
+        img.setAttribute("src", "assets/img/add.png");
+        img.setAttribute("width", "15");
+        img.setAttribute("height", "15");
+        img.setAttribute("title", "add to group");
+        img.setAttribute("style", "float: right");
+
+        li2.appendChild(img);
+        li2.onclick = await InviteToCurrentGroup(data[i]._id);
+
         div.appendChild(li);
+        div.appendChild(li2)
         div.appendChild(AddIcon(data[i]._id));
+
         const firstLi = ul.firstChild;
         div.addEventListener("mouseover", function () {
           this.style.backgroundColor = "white";
@@ -364,11 +381,11 @@ function AddSearch(name) {
 //---THEM ICON KET QUA TIM KIEM---
 function AddIcon(userID) {
   const li2 = document.createElement("li");
-  li2.classList.add("col-4");
+  li2.classList.add("col-2");
   li2.style.display = "inline-block";
   li2.onclick = connectUser(userID);
   const i2 = document.createElement("i");
-  i2.id = userID;
+  //i2.id = userID;
   i2.classList.add("fab", "fa-telegram-plane");
   i2.style.float = "right";
   li2.appendChild(i2);
@@ -569,7 +586,7 @@ async function appendMessageNavigationChecked(group_id, message, sender_id, time
     await getGroupInfo(group_id).then(mydata_1 => {
       groupName = mydata_1.name
     })
-    const div = AddMessageNav(
+    const div = AddSemiMessageNav(
       group_id,
       groupName,
       message,
@@ -603,7 +620,7 @@ function MessageCheckExist(
     span.textContent = "";
     span.style.display = "";
   } else {
-    AddMessageNav(group_id, group_name, message, time);
+    AddSemiMessageNav(group_id, group_name, message, time);
   }
 }
 
@@ -744,3 +761,69 @@ function getLastMessage(group_id) {
 // getLastMessage('649febce22586dbcbe850d02').then(mydata => {
 //  //access mydata here
 // });
+
+function CreateGroup() {
+  var groupName;
+  do {
+    groupName = prompt("Hay nhap ten group muon tao");
+    if (groupName.trim().length === 0) {
+      alert('ban chua nhap ten group, hay nhap ten group');
+    }
+  } while (groupName.trim().length === 0);
+
+  (async () => {
+    const rawResponse = await fetch(
+      "http://127.0.0.1:5500/api/v1/group/create",
+      {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+          accessToken: accessToken,
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({
+          name: groupName,
+          users: [],
+        }),
+      }
+    );
+    const mydata = await rawResponse.json();
+    console.log(mydata);
+    const ul = document.querySelector("#list-message");
+    const div = AddSemiMessageNav(mydata._id, groupName, "Empty", "Empty");
+    ul.insertBefore(div, ul.firstChild);
+
+    ChangeGroup(mydata._id);
+  })();
+}
+
+function InviteToCurrentGroup(userId) {
+  return function () {
+    if (currentGroup != "") {
+      (async () => {
+        const rawResponse = await fetch(
+          "http://127.0.0.1:5500/api/v1/group/info/" + currentGroup,
+          {
+            method: "GET",
+            headers: {
+              Accept: "application/json",
+              "Content-Type": "application/json",
+              accessToken: accessToken,
+            },
+          }
+        );
+        const mydata = await rawResponse.json();
+        var groupName = ""
+        await getGroupInfo(currentGroup).then((data) => {
+          groupName = data.name;
+        });
+        if (groupName.trim().length === 0) {
+          alert("Day khong phai group");
+        } else {
+          alert("group chuan roi");
+        }
+      })();
+    }
+  };
+}
