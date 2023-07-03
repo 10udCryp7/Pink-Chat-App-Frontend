@@ -1,0 +1,9 @@
+.text-primary {
+  color: rgb(219, 128, 143) !important;
+}
+.btn {
+  background-color: rgb(219, 128, 143);
+  border-color: rgb(219, 128, 143);
+  --bs-btn-hover-bg: rgb(221, 72, 97);
+  --bs-btn-hover-border-color: rgb(221, 72, 97);
+}
