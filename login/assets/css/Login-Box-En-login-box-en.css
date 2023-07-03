@@ -134,3 +134,7 @@
   background-color: rgb(212, 91, 111);
 }
 
+.form-check-input:checked{
+  background-color: rgb(219, 128, 143);
+  border-color: rgb(219, 128, 143);
+}
