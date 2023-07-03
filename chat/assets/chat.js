@@ -350,7 +350,7 @@ function AddSearch(name) {
 //---THEM ICON KET QUA TIM KIEM---
 function AddIcon(userID) {
   const li2 = document.createElement("li");
-  li2.classList.add("col-2");
+  li2.classList.add("col-4");
   li2.style.display = "inline-block";
   li2.onclick = connectUser(userID);
   const i2 = document.createElement("i");
