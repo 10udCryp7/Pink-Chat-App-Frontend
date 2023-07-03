@@ -6,4 +6,8 @@
   border-color: rgb(219, 128, 143);
   --bs-btn-hover-bg: rgb(221, 72, 97);
   --bs-btn-hover-border-color: rgb(221, 72, 97);
+  --bs-btn-active-bg: rgb(221, 72, 97);
+    --bs-btn-active-border-color: rgb(221, 72, 97);
+    --bs-btn-disabled-bg: rgb(221, 72, 97);
+    --bs-btn-disabled-border-color: rgb(221, 72, 97);
 }

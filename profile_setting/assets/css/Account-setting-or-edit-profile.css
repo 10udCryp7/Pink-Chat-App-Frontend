@@ -4,6 +4,12 @@
 .btn-primary {
   background-color: #db8090;
   border-color: #db8090;
+  --bs-btn-hover-bg: rgb(228, 98, 119);
+  --bs-btn-hover-border-color: rgb(228, 98, 119);
+  --bs-btn-active-bg: rgb(219, 128, 143);
+  --bs-btn-active-border-color: rgb(219, 128, 143);
+  --bs-btn-disabled-bg: rgb(219, 128, 143);
+  --bs-btn-disabled-border-color: rgb(219, 128, 143);
 }
 .account-settings .user-profile {
   margin: 0 0 1rem 0;
@@ -53,7 +59,7 @@
   -webkit-border-radius: 2px;
   -moz-border-radius: 2px;
   border-radius: 2px;
-  font-size: .825rem;
+  font-size: 0.825rem;
   background: #ffffff;
   color: #2e323c;
 }
@@ -66,5 +72,3 @@
   border: 0;
   margin-bottom: 1rem;
 }
-
-
