@@ -37,7 +37,7 @@
 }
 
 .fb-login {
-  background-color: rgb(219, 128, 143);
+  background-color: #1a538a;
 }
 
 .gp-login {
@@ -92,7 +92,7 @@
 #submit-id-submit {
   margin-top: 0px;
   height: 46px;
-  background-color: rgb(219, 128, 143);
+  background-color: rgb(26,138,111);
   border: 0;
   color: rgb(255,255,255);
   margin-bottom: 8px;
@@ -130,6 +130,6 @@
 }
 
 #submit-id-submit:hover {
-  background-color: rgb(199, 114, 142)
+  background-color: rgb(25,130,105);
 }
 
