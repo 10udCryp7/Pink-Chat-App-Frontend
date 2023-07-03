@@ -1,3 +1,4 @@
+
 #login-box {
   max-width: 500px;
   margin: 0 auto;
@@ -92,7 +93,7 @@
 #submit-id-submit {
   margin-top: 0px;
   height: 46px;
-  background-color: rgb(26,138,111);
+  background-color: rgb(219, 128, 143);
   border: 0;
   color: rgb(255,255,255);
   margin-bottom: 8px;
@@ -110,7 +111,7 @@
 }
 
 #forgot-password-link {
-  color: #2474c1;
+  color: rgb(219, 128, 143);
   text-decoration: none;
 }
 
@@ -120,7 +121,7 @@
 }
 
 #register-link {
-  color: #2474c1;
+  color: rgb(219, 128, 143);
   padding: 0px 10px;
   text-decoration: none;
 }
@@ -130,6 +131,6 @@
 }
 
 #submit-id-submit:hover {
-  background-color: rgb(25,130,105);
+  background-color: rgb(212, 91, 111);
 }
 
