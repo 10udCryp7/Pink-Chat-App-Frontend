@@ -1,6 +1,8 @@
 var currentGroup = "";
 var currentUserId = "";
 var accessToken = getCookie("accessToken");
+var users = {};
+
 (async () => {
   const rawResponse = await fetch("http://127.0.0.1:5500/api/v1/user/info", {
     method: "GET",
@@ -189,12 +191,18 @@ function ChangeGroup(group_id) {
       document.getElementById("friendName").innerHTML = groupName;
       const ul = document.getElementById("chat-space");
       for (let i = 0; i < mydata.length; i++) {
+        let senderID = mydata[i].senderUserId
+        if (users[senderID] == undefined) {
+          await getUserInfo(senderID).then(data => {
+            users[senderID] = data.fullName
+          });
+        }
         const li2 = AppendMessage(
           mydata[i]._id,
           mydata[i].senderUserId,
           mydata[i].text,
           mydata[i].mediaID,
-          new Date(Date.parse(mydata[i].datetime))
+          new Date(Date.parse(mydata[i].datetime)),
         );
         ul.appendChild(li2);
         var elem = document.getElementById("chat-space");
@@ -234,8 +242,14 @@ function AppendMessage(MessageID, UserID, Message, MediaID, DateTime) {
     const h6 = document.createElement("h6");
     h6.classList.add("text-muted", "card-subtitle", "text-end");
     h6.style.fontSize = "0.75rem";
-    h6.textContent = DateTime;
+    h6.textContent = DateTime
 
+    const h62 = document.createElement("h6");
+    h62.classList.add("text-muted", "card-subtitle", "text-start");
+    h62.style.fontSize = "0.75rem";
+    h62.textContent = users[UserID]
+
+    cardBodyDiv.appendChild(h62);
     cardBodyDiv.appendChild(p);
     cardBodyDiv.appendChild(h6);
     div.appendChild(cardBodyDiv);
@@ -452,7 +466,7 @@ socket.on("error", (data) => {
   alert("Status: " + status + ",message: " + message);
 });
 
-socket.on("new-message", (data) => {
+socket.on("new-message", async (data) => {
   console.log(data)
   if (data.message.senderUserId != currentUserId) {
     appendMessageNavigationChecked(
@@ -464,6 +478,12 @@ socket.on("new-message", (data) => {
     if (data.groupId == currentGroup) {
 
       let ul = document.getElementById("chat-space");
+      let senderID = data.message.senderUserId
+      if (users[senderID] == undefined) {
+        await getUserInfo(senderID).then(data => {
+          users[senderID] = data.fullName
+          });
+      }
       ul.appendChild(
         AppendMessage(
           "",
