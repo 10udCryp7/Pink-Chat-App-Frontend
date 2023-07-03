@@ -1,3 +1,10 @@
+.text-primary {
+  color: #db8090 !important;
+}
+.btn-primary {
+  background-color: #db8090;
+  border-color: #db8090;
+}
 .account-settings .user-profile {
   margin: 0 0 1rem 0;
   padding-bottom: 1rem;
@@ -34,7 +41,7 @@
 
 .account-settings .about h5 {
   margin: 0 0 15px 0;
-  color: #007ae1;
+  color: rgb(219, 128, 143);
 }
 
 .account-settings .about p {
@@ -59,4 +66,5 @@
   border: 0;
   margin-bottom: 1rem;
 }
+
 
