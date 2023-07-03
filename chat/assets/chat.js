@@ -1,6 +1,8 @@
 var currentGroup = "";
 var currentUserId = "";
 var accessToken = getCookie("accessToken");
+var users = {};
+
 (async () => {
   const rawResponse = await fetch("http://127.0.0.1:5500/api/v1/user/info", {
     method: "GET",
@@ -26,7 +28,6 @@ function getNavigation() {
       headers: {
         Accept: "application/json",
         "Content-Type": "application/json",
-        accessToken: accessToken,
         Authorization: `Bearer ${accessToken}`,
       },
     });
@@ -36,21 +37,23 @@ function getNavigation() {
 
     const ul = document.querySelector("#list-message");
     for (let i = 0; i < mydata.list.length; i++) {
-      await Promise.all([getLastMessage(mydata.list[i]._id), getGroupInfo(mydata.list[i]._id)]).then(([data, mydata_1]) => {
+      await Promise.all([
+        getLastMessage(mydata.list[i]._id),
+        getGroupInfo(mydata.list[i]._id),
+      ]).then(([data, mydata_1]) => {
         var groupName = mydata_1.name;
         if (data.list.length === 0) {
-          const div = AddMessageNav(
+          const div = AddSemiMessageNav(
             mydata.list[i]._id,
             groupName,
             "Empty",
             "Empty"
           );
           ul.insertBefore(div, ul.firstChild);
-        }
-        else {
+        } else {
           const text = data.list[0].text;
           const datetime = new Date(Date.parse(data.list[0].datetime));
-          const div = AddMessageNav(
+          const div = AddSemiMessageNav(
             mydata.list[i]._id,
             groupName,
             text,
@@ -90,14 +93,19 @@ function getCookie(cname) {
 }
 
 //---THEM GROUP VAO NAV---
-function AddMessageNav(group_id, group_name, last_message, last_message_time) {
+function AddSemiMessageNav(
+  group_id,
+  group_name,
+  last_message,
+  last_message_time
+) {
   const li = document.createElement("li");
 
   li.style.cursor = "pointer";
   li.id = group_id;
   console.log(group_id);
   li.addEventListener("click", () => {
-    ChangeGroup(group_id)()
+    ChangeGroup(group_id)();
   });
 
   const div = document.createElement("div");
@@ -181,14 +189,20 @@ function ChangeGroup(group_id) {
       );
       let mydata = await rawResponse.json();
       console.log(mydata);
-      mydata = mydata.list.reverse()
+      mydata = mydata.list.reverse();
       var groupName = "";
-      await getGroupInfo(group_id).then(mydata_1 => {
-        groupName = mydata_1.name
-      })
+      await getGroupInfo(group_id).then((mydata_1) => {
+        groupName = mydata_1.name;
+      });
       document.getElementById("friendName").innerHTML = groupName;
       const ul = document.getElementById("chat-space");
       for (let i = 0; i < mydata.length; i++) {
+        let senderID = mydata[i].senderUserId;
+        if (users[senderID] == undefined) {
+          await getUserInfo(senderID).then((data) => {
+            users[senderID] = data.fullName;
+          });
+        }
         const li2 = AppendMessage(
           mydata[i]._id,
           mydata[i].senderUserId,
@@ -236,6 +250,12 @@ function AppendMessage(MessageID, UserID, Message, MediaID, DateTime) {
     h6.style.fontSize = "0.75rem";
     h6.textContent = DateTime;
 
+    const h62 = document.createElement("h6");
+    h62.classList.add("text-muted", "card-subtitle", "text-start");
+    h62.style.fontSize = "0.75rem";
+    h62.textContent = users[UserID];
+
+    cardBodyDiv.appendChild(h62);
     cardBodyDiv.appendChild(p);
     cardBodyDiv.appendChild(h6);
     div.appendChild(cardBodyDiv);
@@ -316,8 +336,25 @@ function GetSearch() {
         const li = AddSearch(data[i].fullName);
         const ul = document.getElementById("myUL");
         const div = document.createElement("div");
+
+        let li2 = document.createElement("li");
+        li2.setAttribute("class", "col-2");
+        li2.setAttribute("style", "display: inline-block");
+
+        let img = document.createElement("img");
+        img.setAttribute("src", "assets/img/add.png");
+        img.setAttribute("width", "15");
+        img.setAttribute("height", "15");
+        img.setAttribute("title", "add to group");
+        img.setAttribute("style", "float: right");
+
+        li2.appendChild(img);
+        li2.onclick = await InviteToCurrentGroup(data[i]._id);
+
         div.appendChild(li);
+        div.appendChild(li2);
         div.appendChild(AddIcon(data[i]._id));
+
         const firstLi = ul.firstChild;
         div.addEventListener("mouseover", function () {
           this.style.backgroundColor = "white";
@@ -350,11 +387,11 @@ function AddSearch(name) {
 //---THEM ICON KET QUA TIM KIEM---
 function AddIcon(userID) {
   const li2 = document.createElement("li");
-  li2.classList.add("col-4");
+  li2.classList.add("col-2");
   li2.style.display = "inline-block";
   li2.onclick = connectUser(userID);
   const i2 = document.createElement("i");
-  i2.id = userID;
+  //i2.id = userID;
   i2.classList.add("fab", "fa-telegram-plane");
   i2.style.float = "right";
   li2.appendChild(i2);
@@ -379,17 +416,16 @@ function getGroupInfo(groupId) {
     if (groupName.trim().length === 0) {
       for (let i = 0; i < mydata.users.length; i++) {
         if (mydata.users[i].userId != currentUserId) {
-          await getUserInfo(mydata.users[i].userId).then(data => {
-            groupName += data.fullName + ', ';
+          await getUserInfo(mydata.users[i].userId).then((data) => {
+            groupName += data.fullName + ", ";
           });
         }
       }
       groupName = groupName.slice(0, -2);
-      mydata.name = groupName
+      mydata.name = groupName;
     }
     resolve(mydata);
   });
-  
 }
 
 //---AN KET QUA TIM KIEM---
@@ -452,8 +488,8 @@ socket.on("error", (data) => {
   alert("Status: " + status + ",message: " + message);
 });
 
-socket.on("new-message", (data) => {
-  console.log(data)
+socket.on("new-message", async (data) => {
+  console.log(data);
   if (data.message.senderUserId != currentUserId) {
     appendMessageNavigationChecked(
       data.groupId,
@@ -462,8 +498,13 @@ socket.on("new-message", (data) => {
       new Date(Date.parse(data.message.datetime))
     );
     if (data.groupId == currentGroup) {
-
       let ul = document.getElementById("chat-space");
+      let senderID = data.message.senderUserId;
+      if (users[senderID] == undefined) {
+        await getUserInfo(senderID).then((data) => {
+          users[senderID] = data.fullName;
+        });
+      }
       ul.appendChild(
         AppendMessage(
           "",
@@ -483,8 +524,8 @@ socket.on("new-message", (data) => {
 function sendMessage() {
   if (currentGroup != "") {
     let message = chat_input.value;
-    chat_input.value = ""
-    let index = message.lastIndexOf('\n');
+    chat_input.value = "";
+    let index = message.lastIndexOf("\n");
     if (index !== -1) {
       message = message.substring(0, index);
     }
@@ -510,23 +551,36 @@ function sendMessage() {
         const content = await rawResponse.json();
         let ul = document.getElementById("chat-space");
         ul.appendChild(
-          AppendMessage(content._id, content.senderUserId, content.text, "", new Date(Date.parse(content.datetime)))
+          AppendMessage(
+            content._id,
+            content.senderUserId,
+            content.text,
+            "",
+            new Date(Date.parse(content.datetime))
+          )
         );
-        appendMessageNavigationChecked(currentGroup, content.text, content.senderUserId, new Date(Date.parse(content.datetime)))
+        appendMessageNavigationChecked(
+          currentGroup,
+          content.text,
+          content.senderUserId,
+          new Date(Date.parse(content.datetime))
+        );
         var elem = document.getElementById("chat-space");
         elem.scrollTop = elem.scrollHeight;
       })();
-
-
     }
-  }
-  else {
-    alert("Select a chat or start a new conversation")
+  } else {
+    alert("Select a chat or start a new conversation");
   }
 }
 
 //---KIEM TRA SU TON TAI CUA GROUP, SUA THONG TIN, THEM GROUP MOI, KHI TIN NHAN DEN---
-async function appendMessageNavigationChecked(group_id, message, sender_id, time) {
+async function appendMessageNavigationChecked(
+  group_id,
+  message,
+  sender_id,
+  time
+) {
   const navigationList = document.getElementById("list-message");
   let listOfli = navigationList.querySelectorAll("li");
   let liIdList = [];
@@ -546,15 +600,10 @@ async function appendMessageNavigationChecked(group_id, message, sender_id, time
   } else {
     const ul = document.querySelector("#list-message");
     var groupName = "";
-    await getGroupInfo(group_id).then(mydata_1 => {
-      groupName = mydata_1.name
-    })
-    const div = AddMessageNav(
-      group_id,
-      groupName,
-      message,
-      time
-    );
+    await getGroupInfo(group_id).then((mydata_1) => {
+      groupName = mydata_1.name;
+    });
+    const div = AddSemiMessageNav(group_id, groupName, message, time);
     ul.insertBefore(div, ul.firstChild);
   }
 }
@@ -583,7 +632,7 @@ function MessageCheckExist(
     span.textContent = "";
     span.style.display = "";
   } else {
-    AddMessageNav(group_id, group_name, message, time);
+    AddSemiMessageNav(group_id, group_name, message, time);
   }
 }
 
@@ -593,59 +642,58 @@ function connectUser(userID) {
     myDiv.style.display = "none";
     (async () => {
       let test = false;
-      const rawResponse = await fetch("http://127.0.0.1:5500/api/v1/group/list", {
-        method: "POST",
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json",
-          accessToken: accessToken,
-          Authorization: `Bearer ${accessToken}`,
-        },
-      });
+      const rawResponse = await fetch(
+        "http://127.0.0.1:5500/api/v1/group/list",
+        {
+          method: "POST",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
+      );
       const mydata = await rawResponse.json();
       for (let i = 0; i < mydata.list.length; i++) {
-        let members = mydata.list[i].users
+        let members = mydata.list[i].users;
         if (members.length === 2) {
-          let arr = []
-          arr.push(members[0].userId)
-          arr.push(members[1].userId)
+          let arr = [];
+          arr.push(members[0].userId);
+          arr.push(members[1].userId);
           if (arr.includes(userID) && arr.includes(currentUserId)) {
             test = true;
-            ChangeGroup(mydata.list[i]._id)()
+            ChangeGroup(mydata.list[i]._id)();
           }
         }
       }
       if (test == false) {
         (async () => {
-          const rawResponse = await fetch("http://127.0.0.1:5500/api/v1/group/create", {
-            method: "POST",
-            headers: {
-              Accept: "application/json",
-              "Content-Type": "application/json",
-              accessToken: accessToken,
-              Authorization: `Bearer ${accessToken}`,
-            },
-            body: JSON.stringify({
-              name: "",
-              users: [
-                {
-                  userId: userID,
-                  isAdmin: false
-                },
-                {
-                  userId: currentUserId,
-                  isAdmin: false
-                }
-              ]
-            }),
-          });
-          const mydata = await rawResponse.json();
-          MessageCheckExist(
-            mydata._id,
-            mydata.name,
-            "Empty",
-            "Empty"
+          const rawResponse = await fetch(
+            "http://127.0.0.1:5500/api/v1/group/create",
+            {
+              method: "POST",
+              headers: {
+                Accept: "application/json",
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${accessToken}`,
+              },
+              body: JSON.stringify({
+                name: "",
+                users: [
+                  {
+                    userId: userID,
+                    isAdmin: false,
+                  },
+                  {
+                    userId: currentUserId,
+                    isAdmin: false,
+                  },
+                ],
+              }),
+            }
           );
+          const mydata = await rawResponse.json();
+          MessageCheckExist(mydata._id, mydata.name, "Empty", "Empty");
           ChangeGroup(mydata._id)();
         })();
       }
@@ -724,3 +772,92 @@ function getLastMessage(group_id) {
 // getLastMessage('649febce22586dbcbe850d02').then(mydata => {
 //  //access mydata here
 // });
+
+function CreateGroup() {
+  var groupName;
+  do {
+    groupName = prompt("Hay nhap ten group muon tao");
+    if (groupName.trim().length === 0) {
+      alert("ban chua nhap ten group, hay nhap ten group");
+    }
+  } while (groupName.trim().length === 0);
+
+  (async () => {
+    const rawResponse = await fetch(
+      "http://127.0.0.1:5500/api/v1/group/create",
+      {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({
+          name: groupName,
+          users: [],
+        }),
+      }
+    );
+    const mydata = await rawResponse.json();
+    console.log(mydata);
+    const ul = document.querySelector("#list-message");
+    const div = AddSemiMessageNav(mydata._id, groupName, "Empty", "Empty");
+    ul.insertBefore(div, ul.firstChild);
+
+    ChangeGroup(mydata._id);
+  })();
+}
+
+function InviteToCurrentGroup(userId) {
+  return function () {
+    (async () => {
+      const rawResponse = await fetch(
+        "http://127.0.0.1:5500/api/v1/group/info/" + currentGroup,
+        {
+          method: "GET",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      var mydata = await rawResponse.json();
+      console.log(mydata);
+      var groupName = mydata.name;
+      if (groupName.trim().length === 0) {
+        alert("Day Khong Phai Group");
+      } else {
+        const rawResponse2 = await fetch(
+          "http://127.0.0.1:5500/api/v1/group/invite/",
+          {
+            method: "PATCH",
+            headers: {
+              Accept: "application/json",
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${accessToken}`,
+            },
+            body: JSON.stringify({
+              groupId: currentGroup,
+              inviteeUserId: userId,
+            }),
+          }
+        );
+        var mydata2 = await rawResponse2.json();
+        console.log(mydata2);
+        if (mydata2.status != 401) {
+          if (mydata2.already == false) {
+            alert("them thanh vien vao group thanh cong");
+          } else {
+            alert("thanh vien nay da trong group roi");
+          }
+        }
+        else
+        {
+          alert('ban khong phai admin nen khong the them thanh vien vao group');
+        }
+        
+      }
+    })();
+  };
+}
