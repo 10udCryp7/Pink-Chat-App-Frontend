@@ -22,19 +22,19 @@ function Register() {
       const content = await rawResponse;
       console.log(content);
       if (CheckRegister(content)) {
-        alert("dang ki thanh cong, moi dang nhap");
+        alert("Đăng kí tài khoản thành công, mời đăng nhập");
         location.replace("../login/index.html");
       }
     })();
   } else {
-    alert("sai mat khau");
+    alert("Mật khẩu không trùng khớp, mời nhập lại");
   }
 }
 
 function CheckRegister(content) {
   if (content.status == 409)
   {
-    alert('email da ton tai')
+    alert('Email bạn sử dụng để đăng kí tài khoản mới đã tồn tại')
     return false;
   }
   return true;

@@ -20,7 +20,7 @@ function ProfileSetting() {
     });
     const content = await rawResponse.json();
     console.log(content);
-    alert('THANH CONG');
+    alert('Sửa thông tin thành công');
     GoBack();
   })();
 }

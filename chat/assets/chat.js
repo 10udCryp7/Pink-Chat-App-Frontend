@@ -252,9 +252,10 @@ function AppendMessage(MessageID, UserID, Message, MediaID, DateTime) {
 
     const h62 = document.createElement("h6");
     h62.classList.add("text-muted", "card-subtitle", "text-start");
-    h62.style.fontSize = "0.75rem";
+    h62.style.fontSize = "1rem";
+    h62.style.color = "black";
     h62.textContent = users[UserID];
-
+    h62.style.fontWeight = "bold";
     cardBodyDiv.appendChild(h62);
     cardBodyDiv.appendChild(p);
     cardBodyDiv.appendChild(h6);
@@ -570,7 +571,7 @@ function sendMessage() {
       })();
     }
   } else {
-    alert("Select a chat or start a new conversation");
+    alert("Chọn một cuộc hội thoại hoặc bắt đầu một cuộc hội thoại mới");
   }
 }
 
@@ -605,6 +606,12 @@ async function appendMessageNavigationChecked(
     });
     const div = AddSemiMessageNav(group_id, groupName, message, time);
     ul.insertBefore(div, ul.firstChild);
+    let li = document.getElementById(group_id);
+    let span = li.querySelector("span");
+    span.textContent = "";
+    if (currentGroup != group_id) {
+      span.style.display = "";
+    }
   }
 }
 //---KIEM TRA SU TON TAI CUA GROUP, SUA THONG TIN, THEM GROUP MOI, KHI TIN NHAN DI---
@@ -776,9 +783,9 @@ function getLastMessage(group_id) {
 function CreateGroup() {
   var groupName;
   do {
-    groupName = prompt("Hay nhap ten group muon tao");
+    groupName = prompt("Hãy nhập tên nhóm muốn tạo");
     if (groupName.trim().length === 0) {
-      alert("ban chua nhap ten group, hay nhap ten group");
+      alert("Bạn chưa nhập tên nhóm, mời nhập tên nhóm");
     }
   } while (groupName.trim().length === 0);
 
@@ -826,7 +833,7 @@ function InviteToCurrentGroup(userId) {
       console.log(mydata);
       var groupName = mydata.name;
       if (groupName.trim().length === 0) {
-        alert("Day Khong Phai Group");
+        alert("Đây không phải là nhóm");
       } else {
         const rawResponse2 = await fetch(
           "http://127.0.0.1:5500/api/v1/group/invite/",
@@ -847,14 +854,14 @@ function InviteToCurrentGroup(userId) {
         console.log(mydata2);
         if (mydata2.status != 401) {
           if (mydata2.already == false) {
-            alert("them thanh vien vao group thanh cong");
+            alert("Thêm thành viên vào nhóm thành công");
           } else {
-            alert("thanh vien nay da trong group roi");
+            alert("Người dùng này đã tham gia group rồi");
           }
         }
         else
         {
-          alert('ban khong phai admin nen khong the them thanh vien vao group');
+          alert('Bạn không phải quản trị viên nên không thể thêm thành viên khác');
         }
         
       }
