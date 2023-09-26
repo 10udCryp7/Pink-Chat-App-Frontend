@@ -17,7 +17,7 @@ Proud to be members of **UET Code Camp 2023** training program, we finished our 
  - Instant message delivery
  - And certain CRUD operations on users, groups, media, and messages.
 
-This repository contains the **FRONTEND** of the app. The BACKEND part is housed at: <[(https://github.com/laam-egg/pink-chat-backend]>.
+This repository contains the **FRONTEND** of the app. The BACKEND part is housed at: <https://github.com/laam-egg/pink-chat-backend>.
 
 ## Technologies
 Technologies used in backend are:
